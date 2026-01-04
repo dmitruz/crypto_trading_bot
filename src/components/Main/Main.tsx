@@ -22,7 +22,6 @@ export default function Main() {
                 <button onClick={bot.start} disabled={bot.running} className="start">Start Trading</button>
                 <button onClick={bot.stop} disabled={!bot.running} className="stop">Stop Trading</button>
             </div>
-            <useTradingBot />
         </main >
     );
 }
