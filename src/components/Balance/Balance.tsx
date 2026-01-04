@@ -1,11 +1,16 @@
 import "./Balance.scss";
 
-export default function Balance() {
+interface Props {
+    balance: number;
+    profit: number;
+}
+
+export default function Balance({ balance, profit }: Props) {
     return (
         <div className="balance-container">
             <div className="balance-box">
-                <p>Balance: <strong>$1000</strong></p>
-                <p className="profit">Profit: $0</p>
+                <p>Balance: <strong>{balance}</strong></p>
+                <p>Profit: <strong>{profit}</strong></p>
             </div >
         </div>
     )

@@ -6,7 +6,7 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <Balance />
+      <Balance balance={1000} profit={0} />
       <Main />
     </>
   );
