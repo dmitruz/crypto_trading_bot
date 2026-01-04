@@ -1,7 +1,16 @@
+.balance-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .balance-box {
-    font-size: 13px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #8fa3c7;
 
     .profit {
-        color: #00ff9d;
+        color: #8fa3c7;
+
     }
 }
