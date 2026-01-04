@@ -1,13 +1,10 @@
-import React from 'react';
-import './App.css';
-import TradingBot from './TradingBot';
+import Navbar from "./components/Navbar";
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <TradingBot />
-    </div>
+    <>
+      <Navbar />
+    </>
   );
 }
 
-export default App;

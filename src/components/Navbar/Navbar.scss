@@ -1,0 +1,39 @@
+.navbar {
+    height: 70px;
+    background: #151f32;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+    align-items: center;
+    border-bottom: 1px solid #1f2a44;
+}
+
+.nav-left button {
+    background: transparent;
+    border: none;
+    color: #8fa3c7;
+    margin-right: 20px;
+    font-size: 15px;
+    cursor: pointer;
+
+    &:hover {
+        color: white;
+    }
+}
+
+.nav-right {
+    text-align: right;
+}
+
+.username {
+    font-size: 14px;
+    color: #b3c2e1;
+}
+
+.balance-box {
+    font-size: 13px;
+
+    .profit {
+        color: #00ff9d;
+    }
+}
