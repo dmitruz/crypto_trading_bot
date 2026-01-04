@@ -1,38 +1,39 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { makeMoney } from "./TradingAgine";
 
-export default function TradingBot() {
-    const [balance, setBalance] = useState(1000);
-    const [profit, setProfit] = useState(0);
+export function useTradingBot(
+    balance: number,
+    profit: number,
+    onUpdate: (balance: number, profit: number) => void
+) {
+    const runningRef = useRef(false);
     const [running, setRunning] = useState(false);
 
-    const startBot = async () => {
+    const start = async () => {
+        if (runningRef.current) return;
+
+        runningRef.current = true;
         setRunning(true);
         console.clear();
 
         const result = await makeMoney({
             balance,
             profit,
-            rounds: 5,
             intervalSec: 2,
-            onLog: (msg) => console.log(msg)
+            isRunning: () => runningRef.current,
+            onLog: msg => console.log(msg)
         });
 
-        setBalance(result.balance);
-        setProfit(result.profit);
+        runningRef.current = false;
+        setRunning(false);
+        onUpdate(result.balance, result.profit);
+    };
+
+    const stop = () => {
+        runningRef.current = false;
         setRunning(false);
     };
 
-    return (
-        <div style={{ padding: 20 }}>
-            <h2>Trading Bot</h2>
-            <p>Balance: {balance}</p>
-            <p>Profit: {profit}</p>
-
-            <button onClick={startBot} disabled={running}>
-                {running ? "Running..." : "Start Trading"}
-            </button>
-        </div>
-    );
+    return { start, stop, running };
 }
 
