@@ -1,0 +1,30 @@
+.prices-board {
+    display: flex;
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.price-tile {
+    width: 120px;
+    height: 120px;
+    background: #111;
+    border-radius: 12px;
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    font-weight: bold;
+}
+
+.price-tile .label {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.price-tile .price {
+    font-size: 20px;
+    margin-top: 8px;
+}

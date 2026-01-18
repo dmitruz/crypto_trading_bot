@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
+import PricesBoard from "../PriceBoard/PriceBoard";
 import "./Main.scss";
 
 
@@ -15,6 +16,7 @@ export default function Main() {
 
     return (
         <main className="main">
+            <PricesBoard />
             <BalanceView balance={balance} profit={profit} />
             <h1>Trading Bot FINA</h1>
 
