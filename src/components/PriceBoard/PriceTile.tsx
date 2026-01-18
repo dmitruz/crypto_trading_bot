@@ -1,31 +1,20 @@
+import { AssetPrice } from "./PriceBoard";
 import { usePriceTicker } from "./usePriceTicker";
+import "./PricesBoard.scss";
 
 interface Props {
-    label: string;
-    initial: number;
-    minChange: number;
-    maxChange: number;
-    decimals: number;
+    asset: AssetPrice;
 }
 
-export default function PriceTile({
-    label,
-    initial,
-    minChange,
-    maxChange,
-    decimals
-}: Props) {
-    const price = usePriceTicker({
-        initial,
-        minChange,
-        maxChange,
-        decimals
-    });
+export default function PriceTile({ asset }: Props) {
+    const { label, price, minChange, maxChange, decimals } = asset;
+
 
     return (
-        <div className="price-tile">
-            <span className="label">{label}</span>
-            <span className="price">${price}</span>
+        // <div className={`price-tile ${direction}`}>
+        <div className={`price-tile`}>
+            <span className="label">{asset.label}</span>
+            <span className="price">${asset.price}</span>
         </div>
     );
 }

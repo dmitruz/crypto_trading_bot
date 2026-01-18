@@ -11,7 +11,7 @@ export interface AssetPrice {
     decimals: number;
 }
 
-const INITIAL_PRICES: AssetPrice[] = [
+export const INITIAL_PRICES: AssetPrice[] = [
     { id: "bmb", label: "BMB", price: 345, minChange: 12, maxChange: 18, decimals: 2 },
     { id: "wir", label: "WIR", price: 187, minChange: 5, maxChange: 9, decimals: 2 },
     { id: "dod", label: "DOD", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
@@ -19,10 +19,12 @@ const INITIAL_PRICES: AssetPrice[] = [
     { id: "tor", label: "TOR", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 }
 ];
 
+interface PricesBoardProps {
+    prices: AssetPrice[];
+    setPrices: React.Dispatch<React.SetStateAction<AssetPrice[]>>;
+}
 
-export default function PricesBoard() {
-    const [prices, setPrices] = useState(INITIAL_PRICES);
-
+export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
     useEffect(() => {
         const interval = setInterval(() => {
             setPrices(prev =>
@@ -32,16 +34,15 @@ export default function PricesBoard() {
                             asset.minChange) *
                         (Math.random() > 0.5 ? 1 : -1);
 
-                    const newPrice = Number(
-                        (asset.price + delta).toFixed(asset.decimals)
-                    );
+                    const newPrice = Number((asset.price + delta).toFixed(asset.decimals));
 
                     return { ...asset, price: newPrice };
                 })
             );
         }, 10_000);
+
         return () => clearInterval(interval);
-    }, []);
+    }, [setPrices]);
     return (
         <section className="prices-board">
             {prices.map(asset => (

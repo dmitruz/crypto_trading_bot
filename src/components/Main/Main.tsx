@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
-import PricesBoard from "../PriceBoard/PriceBoard";
+import PricesBoard, { AssetPrice, INITIAL_PRICES } from "../PriceBoard/PriceBoard";
+
 import "./Main.scss";
 
 
 export default function Main() {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
+    const [prices, setPrices] = useState<AssetPrice[]>(INITIAL_PRICES);
 
     const bot = useTradingBot(balance, profit, (b, p) => {
         setBalance(b);
@@ -16,7 +18,7 @@ export default function Main() {
 
     return (
         <main className="main">
-            <PricesBoard />
+            <PricesBoard prices={prices} setPrices={setPrices} />
             <BalanceView balance={balance} profit={profit} />
             <h1>Trading Bot FINA</h1>
 

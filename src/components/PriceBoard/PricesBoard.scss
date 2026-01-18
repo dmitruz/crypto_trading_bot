@@ -10,13 +10,36 @@
     background: #111;
     border-radius: 12px;
     color: white;
-
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
     font-weight: bold;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.price-tile.up {
+    color: #2ecc71;
+    background: #1a1a1a;
+}
+
+.price-tile.down {
+    color: #e74c3c;
+    background: #220000;
+}
+
+@keyframes flash {
+    0% {
+        background: #111;
+    }
+
+    50% {
+        background: #333;
+    }
+
+    100% {
+        background: #111;
+    }
 }
 
 .price-tile .label {
