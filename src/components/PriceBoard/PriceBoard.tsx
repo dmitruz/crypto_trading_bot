@@ -1,50 +1,52 @@
-
+import { useState, useEffect } from "react";
 import PriceTile from "./PriceTile";
 import "./PricesBoard.scss";
 
+export interface AssetPrice {
+    id: string;
+    label: string;
+    price: number;
+    minChange: number;
+    maxChange: number;
+    decimals: number;
+}
+
+const INITIAL_PRICES: AssetPrice[] = [
+    { id: "bmb", label: "BMB", price: 345, minChange: 12, maxChange: 18, decimals: 2 },
+    { id: "wir", label: "WIR", price: 187, minChange: 5, maxChange: 9, decimals: 2 },
+    { id: "dod", label: "DOD", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
+    { id: "zvh", label: "ZVH", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
+    { id: "tor", label: "TOR", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 }
+];
+
+
 export default function PricesBoard() {
+    const [prices, setPrices] = useState(INITIAL_PRICES);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setPrices(prev =>
+                prev.map(asset => {
+                    const delta =
+                        (Math.random() * (asset.maxChange - asset.minChange) +
+                            asset.minChange) *
+                        (Math.random() > 0.5 ? 1 : -1);
+
+                    const newPrice = Number(
+                        (asset.price + delta).toFixed(asset.decimals)
+                    );
+
+                    return { ...asset, price: newPrice };
+                })
+            );
+        }, 10_000);
+        return () => clearInterval(interval);
+    }, []);
     return (
         <section className="prices-board">
-            <PriceTile
-                label="BMB"
-                initial={345}
-                minChange={12}
-                maxChange={18}
-                decimals={2}
-            />
-
-            <PriceTile
-                label="Wiru"
-                initial={187}
-                minChange={5}
-                maxChange={9}
-                decimals={2}
-            />
-
-            <PriceTile
-                label="DOD"
-                initial={0.087}
-                minChange={0.02}
-                maxChange={0.025}
-                decimals={3}
-            />
-
-            <PriceTile
-                label="ZVH"
-                initial={0.63}
-                minChange={0.01}
-                maxChange={0.03}
-                decimals={2}
-            />
-
-            <PriceTile
-                label="TOR"
-                initial={0.63}
-                minChange={0.01}
-                maxChange={0.03}
-                decimals={2}
-            />
-
+            {prices.map(asset => (
+                <PriceTile key={asset.id} asset={asset} />
+            ))}
         </section>
     );
 }
