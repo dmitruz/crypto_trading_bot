@@ -1,10 +1,13 @@
 import { useRef, useState } from "react";
-import { makeMoney } from "./TradingAgine";
+import { makeMoney, Asset } from "./TradingEngine";
 
 export function useTradingBot(
     balance: number,
     profit: number,
-    onUpdate: (balance: number, profit: number) => void
+    assets: Asset[],
+    onUpdate: (balance: number, profit: number) => void,
+    onBuyAsset: (asset: string) => void,
+    onSellAsset: () => void
 ) {
     const runningRef = useRef(false);
     const [running, setRunning] = useState(false);
@@ -19,9 +22,12 @@ export function useTradingBot(
         const result = await makeMoney({
             balance,
             profit,
-            intervalSec: 2,
+            assets,
+            onUpdate,
+            onBuyAsset,
+            onSellAsset,
             isRunning: () => runningRef.current,
-            onLog: msg => console.log(msg)
+            onLog: console.log
         });
 
         runningRef.current = false;
@@ -32,6 +38,7 @@ export function useTradingBot(
     const stop = () => {
         runningRef.current = false;
         setRunning(false);
+        onSellAsset();
     };
 
     return { start, stop, running };

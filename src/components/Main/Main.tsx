@@ -1,31 +1,70 @@
 import { useState } from "react";
 import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
-import PricesBoard, { AssetPrice, INITIAL_PRICES } from "../PriceBoard/PriceBoard";
+import PricesBoard, {
+    AssetPrice,
+    INITIAL_PRICES
+} from "../PriceBoard/PriceBoard";
+import { Asset } from "../../tradingEngine/TradingEngine";
 
 import "./Main.scss";
-
 
 export default function Main() {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
     const [prices, setPrices] = useState<AssetPrice[]>(INITIAL_PRICES);
+    const [currentAsset, setCurrentAsset] = useState<string | null>(null);
 
-    const bot = useTradingBot(balance, profit, (b, p) => {
-        setBalance(b);
-        setProfit(p);
-    });
+    const assets: Asset[] = prices.map(p => ({
+        symbol: p.label,
+
+        min: p.price - p.maxChange * 5,
+        max: p.price + p.maxChange * 5,
+
+        step: Number((p.maxChange - p.minChange).toFixed(p.decimals))
+    }));
+    const bot = useTradingBot(
+        balance,
+        profit,
+        assets,
+        (b, p) => {
+            setBalance(b);
+            setProfit(p);
+        },
+        (asset) => setCurrentAsset(asset),
+        () => setCurrentAsset(null)
+    );
 
     return (
         <main className="main">
             <PricesBoard prices={prices} setPrices={setPrices} />
+
+            {currentAsset && (
+                <div className="current-asset">
+                    You’ve purchased: <strong>{currentAsset}</strong>
+                </div>
+            )}
+
             <BalanceView balance={balance} profit={profit} />
             <h1>Trading Bot FINA</h1>
 
             <div className="controls">
-                <button onClick={bot.start} disabled={bot.running} className="start">Start Trading</button>
-                <button onClick={bot.stop} disabled={!bot.running} className="stop">Stop Trading</button>
+                <button
+                    onClick={bot.start}
+                    disabled={bot.running}
+                    className="start"
+                >
+                    Start Trading
+                </button>
+
+                <button
+                    onClick={bot.stop}
+                    disabled={!bot.running}
+                    className="stop"
+                >
+                    Stop Trading
+                </button>
             </div>
-        </main >
+        </main>
     );
 }

@@ -12,7 +12,7 @@ export interface AssetPrice {
 }
 
 export const INITIAL_PRICES: AssetPrice[] = [
-    { id: "bmb", label: "BMB", price: 345, minChange: 12, maxChange: 18, decimals: 2 },
+
     { id: "wir", label: "WIR", price: 187, minChange: 5, maxChange: 9, decimals: 2 },
     { id: "dod", label: "DOD", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
     { id: "zvh", label: "ZVH", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
