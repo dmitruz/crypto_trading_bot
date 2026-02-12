@@ -39,3 +39,12 @@
     background: #ff3b3b;
     color: #2b323e;
 }
+
+.user-container {
+    display: flex;
+}
+
+.user-bar {
+    display: flex;
+    flex-direction: column;
+}

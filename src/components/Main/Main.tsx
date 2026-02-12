@@ -6,10 +6,18 @@ import PricesBoard, {
     INITIAL_PRICES
 } from "../PriceBoard/PriceBoard";
 import { Asset } from "../../tradingEngine/TradingEngine";
+import { googleLogout } from "@react-oauth/google";
+import GoogleAuthButton from "../Auth/GoogleAuthButton";
+import { GoogleUser } from "../../App";
 
 import "./Main.scss";
 
-export default function Main() {
+interface Props {
+    user: GoogleUser | null;
+    setUser: (u: GoogleUser | null) => void;
+}
+
+export default function Main({ user, setUser }: Props) {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
     const [prices, setPrices] = useState<AssetPrice[]>(INITIAL_PRICES);
@@ -37,13 +45,32 @@ export default function Main() {
 
     return (
         <main className="main">
+            {!user ? (
+                <GoogleAuthButton onLogin={setUser} />
+            ) : (
+                <div className="user-container">
+                    <div className="user-bar">
+                        <img src={user.picture} width={32} />
+                        <span>{user.name}</span>
+
+                        <button onClick={() => {
+                            googleLogout();
+                            setUser(null)
+                        }}>Logout
+                        </button>
+                    </div>
+                </div>
+            )
+            }
             <PricesBoard prices={prices} setPrices={setPrices} />
 
-            {currentAsset && (
-                <div className="current-asset">
-                    You’ve purchased: <strong>{currentAsset}</strong>
-                </div>
-            )}
+            {
+                currentAsset && (
+                    <div className="current-asset">
+                        You’ve purchased: <strong>{currentAsset}</strong>
+                    </div>
+                )
+            }
 
             <BalanceView balance={balance} profit={profit} />
             <h1>Trading Bot FINA</h1>
@@ -65,6 +92,6 @@ export default function Main() {
                     Stop Trading
                 </button>
             </div>
-        </main>
+        </main >
     );
 }
