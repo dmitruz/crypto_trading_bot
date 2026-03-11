@@ -14,7 +14,7 @@ import "./Main.scss";
 
 interface Props {
     user: GoogleUser | null;
-    setUser: (u: GoogleUser | null) => void;
+    setUser: React.Dispatch<React.SetStateAction<GoogleUser | null>>;
 }
 
 export default function Main({ user, setUser }: Props) {

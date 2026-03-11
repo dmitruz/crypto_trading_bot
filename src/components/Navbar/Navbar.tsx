@@ -1,16 +1,28 @@
+import { GoogleUser } from "../../App";
 import "./Navbar.scss";
 
-export default function Navbar() {
+interface Props {
+    user: GoogleUser | null;
+    setUser: React.Dispatch<React.SetStateAction<GoogleUser | null>>;
+}
+
+
+export default function Navbar({ user, setUser }: Props) {
     return (
         <nav className="navbar">
-            <div className="nav-left">
-                <button>History</button>
-                <button>Analytics</button>
-            </div>
+            <h2>Trading Bot</h2>
 
-            <div className="nav-right">
-                <span className="username">John Doe</span>
-            </div>
+            {user && (
+                <div className="user">
+                    <img src={user.picture} width={32} />
+                    <span>{user.name}</span>
+
+                    <button onClick={() => setUser(null)}>
+                        Logout
+                    </button>
+                </div>
+            )}
         </nav>
+
     );
 }
