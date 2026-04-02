@@ -11,13 +11,6 @@ export interface AssetPrice {
     decimals: number;
 }
 
-export const INITIAL_PRICES: AssetPrice[] = [
-
-    { id: "wir", label: "WIR", price: 187, minChange: 5, maxChange: 9, decimals: 2 },
-    { id: "dod", label: "DOD", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
-    { id: "zvh", label: "ZVH", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 },
-    { id: "tor", label: "TOR", price: 0.087, minChange: 0.02, maxChange: 0.025, decimals: 3 }
-];
 
 interface PricesBoardProps {
     prices: AssetPrice[];
@@ -26,28 +19,72 @@ interface PricesBoardProps {
 
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
     useEffect(() => {
+        fetch("http://localhost:4000/prices")
+            .then(res => res.json())
+            .then(data => {
+                const mapped = Object.keys(data).map((symbol, index) => {
+                    const history = data[symbol];
+                    const last = history[history.length - 1];
+
+                    return {
+                        id: symbol.toLowerCase(),
+                        label: symbol,
+                        price: last.price,
+                        minChange: last.price * 0.01,
+                        maxChange: last.price * 0.03,
+                        decimals: last.price < 1 ? 3 : 2
+                    };
+                });
+
+                setPrices(mapped);
+            });
+    }, [setPrices]);
+
+    useEffect(() => {
         const interval = setInterval(() => {
             setPrices(prev =>
                 prev.map(asset => {
+
                     const delta =
                         (Math.random() * (asset.maxChange - asset.minChange) +
                             asset.minChange) *
                         (Math.random() > 0.5 ? 1 : -1);
 
-                    const newPrice = Number((asset.price + delta).toFixed(asset.decimals));
+                    const newPrice = Math.max(
+                        0.0001,
+                        Number((asset.price + delta).toFixed(asset.decimals))
+                    );
 
                     return { ...asset, price: newPrice };
                 })
             );
         }, 10_000);
 
-        return () => clearInterval(interval);
-    }, [setPrices]);
-    return (
-        <section className="prices-board">
-            {prices.map(asset => (
-                <PriceTile key={asset.id} asset={asset} />
-            ))}
-        </section>
-    );
-}
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setPrices(prev =>
+                    prev.map(asset => {
+
+                        const delta =
+                            (Math.random() * (asset.maxChange - asset.minChange) +
+                                asset.minChange) *
+                            (Math.random() > 0.5 ? 1 : -1);
+
+                        const newPrice = Math.max(
+                            0.0001,
+                            Number((asset.price + delta).toFixed(asset.decimals))
+                        );
+
+                        return { ...asset, price: newPrice };
+                    })
+                );
+            }, 10_000);
+
+            return (
+                <section className="prices-board">
+                    {prices.map(asset => (
+                        <PriceTile key={asset.id} asset={asset} />
+                    ))}
+                </section>
+            );
+        }

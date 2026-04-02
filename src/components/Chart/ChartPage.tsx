@@ -1,6 +1,6 @@
 
 import { useParams, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
     LineChart,
@@ -12,16 +12,20 @@ import {
 } from "recharts";
 
 import { generateChartData } from "./GenerateChartata";
+import data from "../../../server/data/prices.json";
 
 export default function ChartPage() {
 
     const { symbol } = useParams();
-    const location = useLocation();
-    const startPrice = location.state?.price || 100;
+    const [data, setData] = useState([]);
 
-    const [data] = useState(
-        generateChartData(startPrice)
-    );
+    useEffect(() => {
+        fetch(`http://localhost:4000/prices/${symbol}`)
+            .then(res => res.json())
+            .then(setData);
+    }, [symbol]);
+
+
 
     return (
         <div style={{ width: "100%", height: "100vh", padding: 40 }}>
@@ -31,21 +35,9 @@ export default function ChartPage() {
             <ResponsiveContainer width="100%" height={400}>
 
                 <LineChart data={data}>
-
-                    <XAxis dataKey="time" />
-
+                    <XAxis dataKey="date" />
                     <YAxis />
-
-                    <Tooltip />
-
-                    <Line
-                        type="monotone"
-                        dataKey="price"
-                        stroke="#00ff88"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-
+                    <Line dataKey="price" />
                 </LineChart>
 
             </ResponsiveContainer>
