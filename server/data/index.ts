@@ -1,7 +1,18 @@
 
 import express from "express";
 import cors from "cors";
-import data from "./prices.json";
+import rawData from "./prices.json";
+
+interface PricePoint {
+    date: string;
+    price: number;
+}
+
+type PriceData = {
+    [key: string]: PricePoint[];
+};
+
+const data = rawData as PriceData
 
 const app = express();
 app.use(cors());

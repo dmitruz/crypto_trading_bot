@@ -3,7 +3,6 @@ import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
 import PricesBoard, {
     AssetPrice,
-    INITIAL_PRICES
 } from "../PriceBoard/PriceBoard";
 import { Asset } from "../../tradingEngine/TradingEngine";
 import { googleLogout } from "@react-oauth/google";
@@ -20,7 +19,7 @@ interface Props {
 export default function Main({ user, setUser }: Props) {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
-    const [prices, setPrices] = useState<AssetPrice[]>(INITIAL_PRICES);
+    const [prices, setPrices] = useState<AssetPrice[]>([]);
     const [currentAsset, setCurrentAsset] = useState<string | null>(null);
 
     const assets: Asset[] = prices.map(p => ({

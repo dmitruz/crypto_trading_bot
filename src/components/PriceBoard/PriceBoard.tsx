@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import PriceTile from "./PriceTile";
 import "./PricesBoard.scss";
 
@@ -11,13 +11,13 @@ export interface AssetPrice {
     decimals: number;
 }
 
-
 interface PricesBoardProps {
     prices: AssetPrice[];
     setPrices: React.Dispatch<React.SetStateAction<AssetPrice[]>>;
 }
 
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
+
     useEffect(() => {
         fetch("http://localhost:4000/prices")
             .then(res => res.json())
@@ -40,6 +40,7 @@ export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
             });
     }, [setPrices]);
 
+
     useEffect(() => {
         const interval = setInterval(() => {
             setPrices(prev =>
@@ -60,31 +61,14 @@ export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
             );
         }, 10_000);
 
-        useEffect(() => {
-            const interval = setInterval(() => {
-                setPrices(prev =>
-                    prev.map(asset => {
+        return () => clearInterval(interval);
+    }, [setPrices]);
 
-                        const delta =
-                            (Math.random() * (asset.maxChange - asset.minChange) +
-                                asset.minChange) *
-                            (Math.random() > 0.5 ? 1 : -1);
-
-                        const newPrice = Math.max(
-                            0.0001,
-                            Number((asset.price + delta).toFixed(asset.decimals))
-                        );
-
-                        return { ...asset, price: newPrice };
-                    })
-                );
-            }, 10_000);
-
-            return (
-                <section className="prices-board">
-                    {prices.map(asset => (
-                        <PriceTile key={asset.id} asset={asset} />
-                    ))}
-                </section>
-            );
-        }
+    return (
+        <section className="prices-board">
+            {prices.map(asset => (
+                <PriceTile key={asset.id} asset={asset} />
+            ))}
+        </section>
+    );
+}
