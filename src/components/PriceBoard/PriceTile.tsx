@@ -24,8 +24,8 @@ export default function PriceTile({ asset }: Props) {
             {hover && (
                 <Link
                     to={`/chart/${asset.label}`}
+                    state={{ price: asset.price }}
                     target="_blank"
-                    className="chart-link"
                 >
                     View Chart
                 </Link>

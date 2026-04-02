@@ -1,5 +1,5 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useState } from "react";
 
 import {
@@ -16,9 +16,11 @@ import { generateChartData } from "./GenerateChartata";
 export default function ChartPage() {
 
     const { symbol } = useParams();
+    const location = useLocation();
+    const startPrice = location.state?.price || 100;
 
     const [data] = useState(
-        generateChartData(100 + Math.random() * 200)
+        generateChartData(startPrice)
     );
 
     return (
