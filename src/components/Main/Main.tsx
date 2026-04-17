@@ -43,6 +43,10 @@ export default function Main({ user, setUser }: Props) {
         () => setCurrentAsset(null)
     );
 
+    if (!prices.length) {
+        return <div className="loader">Loading prices...</div>;
+    }
+
     return (
         <main className="main">
             {!user ? (
@@ -62,7 +66,8 @@ export default function Main({ user, setUser }: Props) {
                 </div>
             )
             }
-            <PricesBoard prices={prices} setPrices={setPrices} />
+            <PricesBoard prices={prices} setPrices={setPrices}
+            />
 
             {
                 currentAsset && (
