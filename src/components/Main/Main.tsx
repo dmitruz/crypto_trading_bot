@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
 import PricesBoard, {
-    AssetPrice,
-    INITIAL_PRICES
+    AssetPrice
 } from "../PriceBoard/PriceBoard";
 import { Asset } from "../../tradingEngine/TradingEngine";
 import { googleLogout } from "@react-oauth/google";
@@ -20,7 +19,7 @@ interface Props {
 export default function Main({ user, setUser }: Props) {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
-    const [prices, setPrices] = useState<AssetPrice[]>(INITIAL_PRICES);
+    const [prices, setPrices] = useState<AssetPrice[]>([]);
     const [currentAsset, setCurrentAsset] = useState<string | null>(null);
 
     const assets: Asset[] = prices.map(p => ({
@@ -43,6 +42,10 @@ export default function Main({ user, setUser }: Props) {
         () => setCurrentAsset(null)
     );
 
+    if (!prices.length) {
+        return <div className="loader">Loading prices...</div>;
+    }
+
     return (
         <main className="main">
             {!user ? (
@@ -62,7 +65,8 @@ export default function Main({ user, setUser }: Props) {
                 </div>
             )
             }
-            <PricesBoard prices={prices} setPrices={setPrices} />
+            <PricesBoard prices={prices} setPrices={setPrices}
+            />
 
             {
                 currentAsset && (

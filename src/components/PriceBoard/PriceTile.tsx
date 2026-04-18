@@ -14,7 +14,6 @@ export default function PriceTile({ asset }: Props) {
 
 
     return (
-        // <div className={`price-tile ${direction}`}>
         <div className={`price-tile`}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
