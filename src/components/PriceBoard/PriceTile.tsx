@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AssetPrice } from "./PriceBoard";
 import { usePriceTicker } from "./usePriceTicker";
 import { Link } from "react-router-dom";
-import "./PricesBoard.scss";
+import "./PriceBoard.scss";
 
 interface Props {
     asset: AssetPrice;

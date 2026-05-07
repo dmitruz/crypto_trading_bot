@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import PriceTile from "./PriceTile";
-import "./PricesBoard.scss";
+import "./PriceBoard.scss";
 
 export interface AssetPrice {
     id: string;
