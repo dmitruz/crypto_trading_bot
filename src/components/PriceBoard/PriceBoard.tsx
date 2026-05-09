@@ -1,15 +1,7 @@
 import { useEffect } from "react";
 import PriceTile from "./PriceTile";
+import { AssetPrice } from "./types";
 import "./PriceBoard.scss";
-
-export interface AssetPrice {
-    id: string;
-    label: string;
-    price: number;
-    minChange: number;
-    maxChange: number;
-    decimals: number;
-}
 
 
 interface PricesBoardProps {
@@ -18,13 +10,14 @@ interface PricesBoardProps {
 }
 
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
+
     useEffect(() => {
         const fetchPrices = async () => {
             try {
                 const res = await fetch("http://localhost:4000/prices");
                 const data = await res.json();
 
-                const mapped = Object.keys(data)
+                const mapped: AssetPrice[] = Object.keys(data)
                     .filter(symbol => data[symbol]?.length > 0)
                     .map(symbol => {
                         const history = data[symbol];
@@ -50,7 +43,7 @@ export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
         fetchPrices();
 
         const interval = setInterval(fetchPrices, 60_000);
-
+        console.log(prices)
         return () => clearInterval(interval);
     }, [setPrices]);
     return (
