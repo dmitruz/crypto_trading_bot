@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useTradingBot } from "../../tradingEngine/TradingBot";
 import BalanceView from "../Balance";
-import PricesBoard, {
-    AssetPrice
-} from "../PriceBoard/PriceBoard";
+import PriceBoard from "../PriceBoard/PriceBoard";
+import { AssetPrice } from "../PriceBoard/types";
 import { Asset } from "../../tradingEngine/TradingEngine";
 import { googleLogout } from "@react-oauth/google";
 import GoogleAuthButton from "../Auth/GoogleAuthButton";
@@ -42,8 +41,7 @@ export default function Main({ user, setUser }: Props) {
         () => setCurrentAsset(null)
     );
 
-    if (!prices.length) {
-        return <div className="loader">Loading prices...</div>;
+    {
     }
 
     return (
@@ -65,15 +63,15 @@ export default function Main({ user, setUser }: Props) {
                 </div>
             )
             }
-            <PricesBoard prices={prices} setPrices={setPrices}
-            />
+            <PriceBoard prices={prices} setPrices={setPrices} />
+            {!prices.length && <div>Loading prices...</div>}
 
-            {
-                currentAsset && (
-                    <div className="current-asset">
-                        You’ve purchased: <strong>{currentAsset}</strong>
-                    </div>
-                )
+
+            {currentAsset && (
+                <div className="current-asset">
+                    You’ve purchased: <strong>{currentAsset}</strong>
+                </div>
+            )
             }
 
             <BalanceView balance={balance} profit={profit} />

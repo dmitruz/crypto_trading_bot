@@ -32,6 +32,11 @@ async function updatePrices() {
         const apiPrices = res.data;
         const data = readData();
 
+        if (!Object.keys(apiPrices).length) {
+            console.log("No API prices returned");
+            return;
+        }
+
         Object.entries(COIN_MAP).forEach(([symbol, realId]) => {
             const price = apiPrices[realId]?.usd;
             if (!price) return;
@@ -52,7 +57,7 @@ async function updatePrices() {
         console.error("Error fetching prices:", err);
     }
 }
-setInterval(updatePrices, 10_000);
+setInterval(updatePrices, 60_000);
 
 app.get("/prices", (req, res) => {
     res.json(readData());
