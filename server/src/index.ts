@@ -41,10 +41,13 @@ async function updatePrices() {
             const price = apiPrices[realId]?.usd;
             if (!price) return;
 
+            const randomMove = price * ((Math.random() - 0.5) * 0.01);
+
             data[symbol].push({
                 date: new Date().toISOString(),
-                price
+                price: Number((price + randomMove).toFixed(2))
             });
+
             if (data[symbol].length > 365) {
                 data[symbol].shift();
             }
@@ -57,7 +60,9 @@ async function updatePrices() {
         console.error("Error fetching prices:", err);
     }
 }
-setInterval(updatePrices, 60_000);
+updatePrices();
+
+setInterval(updatePrices, 10_000);
 
 app.get("/prices", (req, res) => {
     res.json(readData());
