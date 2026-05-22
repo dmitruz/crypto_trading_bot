@@ -43,10 +43,10 @@ ws.on("message", (msg) => {
     const data = JSON.parse(msg.toString());
 
     const symbolMap: Record<string, string> = {
-        BTCUSDT: "WIR",
-        ETHUSDT: "DOD",
-        SOLUSDT: "ZVH",
-        ADAUSDT: "TOR"
+        BTCUSDT: "BTC",
+        ETHUSDT: "ETH",
+        SOLUSDT: "SOL",
+        ADAUSDT: "ADA"
     };
 
     const appSymbol = symbolMap[data.s];
