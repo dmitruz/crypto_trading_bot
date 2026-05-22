@@ -1,80 +1,85 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import axios from "axios";
+import http from "http";
+import { Server } from "socket.io";
+import WebSocket from "ws";
 
 const app = express();
 app.use(cors());
 
-const DATA_PATH = "./data/prices.json";
+const server = http.createServer(app);
 
-const readData = () =>
-    JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 
-const writeData = (data: any) =>
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
-
-const COIN_MAP: Record<string, string> = {
-    WIR: "bitcoin",
-    DOD: "ethereum",
-    ZVH: "solana",
-    TOR: "cardano"
+const latestPrices: Record<string, number> = {
+    WIR: 0,
+    DOD: 0,
+    ZVH: 0,
+    TOR: 0
 };
 
-async function updatePrices() {
-    try {
-        const ids = Object.values(COIN_MAP).join(",");
+const history: Record<string, { date: string; price: number }[]> = {
+    WIR: [],
+    DOD: [],
+    ZVH: [],
+    TOR: []
+};
 
-        const res = await axios.get(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-        );
+const BINANCE_STREAM =
+    "wss://stream.binance.com:9443/ws/" +
+    "btcusdt@trade/" +
+    "ethusdt@trade/" +
+    "solusdt@trade/" +
+    "adausdt@trade";
 
-        const apiPrices = res.data;
-        const data = readData();
+const ws = new WebSocket(BINANCE_STREAM);
 
-        if (!Object.keys(apiPrices).length) {
-            console.log("No API prices returned");
-            return;
-        }
+ws.on("message", (msg) => {
 
-        Object.entries(COIN_MAP).forEach(([symbol, realId]) => {
-            const price = apiPrices[realId]?.usd;
-            if (!price) return;
+    const data = JSON.parse(msg.toString());
 
-            const randomMove = price * ((Math.random() - 0.5) * 0.01);
+    const symbolMap: Record<string, string> = {
+        BTCUSDT: "WIR",
+        ETHUSDT: "DOD",
+        SOLUSDT: "ZVH",
+        ADAUSDT: "TOR"
+    };
 
-            data[symbol].push({
-                date: new Date().toISOString(),
-                price: Number((price + randomMove).toFixed(2))
-            });
+    const appSymbol = symbolMap[data.s];
 
-            if (data[symbol].length > 365) {
-                data[symbol].shift();
-            }
-        });
+    if (!appSymbol) return;
 
-        writeData(data);
+    const price = Number(data.p);
 
-        console.log("Prices updated");
-    } catch (err) {
-        console.error("Error fetching prices:", err);
+    latestPrices[appSymbol] = price;
+
+    history[appSymbol].push({
+        date: new Date().toISOString(),
+        price
+    });
+
+    if (history[appSymbol].length > 300) {
+        history[appSymbol].shift();
     }
-}
-updatePrices();
 
-setInterval(updatePrices, 10_000);
-
-app.get("/prices", (req, res) => {
-    res.json(readData());
+    io.emit("price-update", {
+        symbol: appSymbol,
+        price
+    });
 });
 
-app.get("/prices/:symbol", (req, res) => {
-    const data = readData();
-    const symbol = req.params.symbol;
-
-    res.json(data[symbol] || []);
+app.get("/prices", (_, res) => {
+    res.json(latestPrices);
 });
 
-app.listen(4000, () => {
+app.get("/history/:symbol", (req, res) => {
+    res.json(history[req.params.symbol] || []);
+});
+
+server.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
