@@ -12,40 +12,49 @@ interface PricesBoardProps {
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
 
     useEffect(() => {
+
         const fetchPrices = async () => {
+
             try {
-                const res = await fetch("http://localhost:4000/prices");
+
+                const res = await fetch(
+                    "http://localhost:4000/prices"
+                );
+
                 const data = await res.json();
 
-                const mapped: AssetPrice[] = Object.keys(data)
-                    .filter(symbol => data[symbol]?.length > 0)
-                    .map(symbol => {
-                        const history = data[symbol];
-                        const last = history[history.length - 1];
+                const mapped: AssetPrice[] = Object.entries(data).map(
+                    ([symbol, price]) => ({
 
-                        return {
-                            id: symbol.toLowerCase(),
-                            label: symbol,
-                            price: last.price,
-                            minChange: last.price * 0.01,
-                            maxChange: last.price * 0.03,
-                            decimals: last.price < 1 ? 3 : 2
-                        };
-                    });
+                        id: symbol.toLowerCase(),
+
+                        label: symbol,
+
+                        price: Number(price),
+
+                        minChange: Number(price) * 0.002,
+
+                        maxChange: Number(price) * 0.01,
+
+                        decimals: Number(price) < 1 ? 3 : 2
+                    })
+                );
 
                 setPrices(mapped);
 
             } catch (err) {
-                console.error("Failed to fetch prices", err);
+                console.error(err);
             }
         };
 
         fetchPrices();
 
-        const interval = setInterval(fetchPrices, 60_000);
-        console.log(prices)
+        const interval = setInterval(fetchPrices, 2000);
+
         return () => clearInterval(interval);
+
     }, [setPrices]);
+
     return (
         <section className="prices-board">
             {prices.map(asset => (
