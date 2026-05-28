@@ -49,13 +49,21 @@ ws.on("message", (msg) => {
         ADAUSDT: "ADA"
     };
 
-    const appSymbol = symbolMap[data.s];
+    const streamSymbol = data.s?.toUpperCase();
+
+    const appSymbol = symbolMap[streamSymbol];
 
     if (!appSymbol) return;
 
     const price = Number(data.p);
 
     latestPrices[appSymbol] = price;
+
+    if (!history[appSymbol]) {
+        history[appSymbol] = [];
+    }
+
+    console.log(streamSymbol, appSymbol, price);
 
     history[appSymbol].push({
         date: new Date().toISOString(),
