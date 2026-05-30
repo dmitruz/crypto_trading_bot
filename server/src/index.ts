@@ -75,6 +75,34 @@ app.get("/prices/:symbol", (req, res) => {
     res.json(data[symbol] || []);
 });
 
+app.get("/history/:symbol", async (req, res) => {
+    const symbol = req.params.symbol.toUpperCase();
+
+    const coinId = COIN_MAP[symbol];
+
+    if (!coinId) {
+        return res.status(404).json({ error: "Unknown coin" });
+    }
+
+    try {
+        const response = await axios.get(
+            `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart`,
+            {
+                params: {
+                    vs_currency: "usd",
+                    days: 30
+                }
+            }
+        );
+
+        res.json(response.data.prices);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch history" });
+    }
+});
+
 app.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
