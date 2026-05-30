@@ -67,14 +67,10 @@ export default function ChartPage() {
             <ResponsiveContainer width="100%" height={400}>
 
                 <LineChart data={data}>
-
                     <XAxis dataKey="date" />
 
                     <YAxis
-                        domain={[
-                            (dataMin: number) => dataMin - 50,
-                            (dataMax: number) => dataMax + 50
-                        ]}
+                        domain={["dataMin", "dataMax"]}
                     />
 
                     <Tooltip />
@@ -83,11 +79,9 @@ export default function ChartPage() {
                         type="monotone"
                         dataKey="price"
                         stroke="#00ff88"
-                        strokeWidth={3}
+                        strokeWidth={2}
                         dot={false}
-                        activeDot={{ r: 6 }}
                     />
-
                 </LineChart>
 
             </ResponsiveContainer>
