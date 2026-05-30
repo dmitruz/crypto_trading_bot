@@ -41,6 +41,11 @@ async function updatePrices() {
             const price = apiPrices[realId]?.usd;
             if (!price) return;
 
+            if (!data[symbol]) {
+                data[symbol] = [];
+            }
+
+
             const randomMove = price * ((Math.random() - 0.5) * 0.01);
 
             data[symbol].push({
