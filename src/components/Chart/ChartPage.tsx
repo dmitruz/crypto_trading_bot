@@ -26,38 +26,32 @@ export default function ChartPage() {
 
     useEffect(() => {
 
+        if (!symbol) return;
+
         const fetchHistory = async () => {
-
             try {
-
                 const res = await fetch(
-                    `http://localhost:4000/prices/${symbol}`
+                    `http://localhost:4000/history/${symbol}`
                 );
 
                 const history = await res.json();
 
-                const formatted = history.map((item: HistoryPoint) => ({
-                    ...item,
-
-                    date: new Date(item.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit"
+                const formatted = history.map(
+                    ([timestamp, price]: [number, number]) => ({
+                        date: new Date(timestamp).toLocaleDateString(),
+                        price
                     })
-                }));
+                );
 
                 setData(formatted);
 
+                console.log(formatted);
             } catch (err) {
                 console.error(err);
             }
         };
 
         fetchHistory();
-
-        const interval = setInterval(fetchHistory, 10_000);
-
-        return () => clearInterval(interval);
 
     }, [symbol]);
 
@@ -73,14 +67,11 @@ export default function ChartPage() {
             <ResponsiveContainer width="100%" height={400}>
 
                 <LineChart data={data}>
-
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date"
+                        minTickGap={50} />
 
                     <YAxis
-                        domain={[
-                            (dataMin: number) => dataMin - 50,
-                            (dataMax: number) => dataMax + 50
-                        ]}
+                        domain={["dataMin", "dataMax"]}
                     />
 
                     <Tooltip />
@@ -89,11 +80,9 @@ export default function ChartPage() {
                         type="monotone"
                         dataKey="price"
                         stroke="#00ff88"
-                        strokeWidth={3}
+                        strokeWidth={2}
                         dot={false}
-                        activeDot={{ r: 6 }}
                     />
-
                 </LineChart>
 
             </ResponsiveContainer>
