@@ -67,7 +67,8 @@ export default function ChartPage() {
             <ResponsiveContainer width="100%" height={400}>
 
                 <LineChart data={data}>
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date"
+                        minTickGap={50} />
 
                     <YAxis
                         domain={["dataMin", "dataMax"]}

@@ -15,10 +15,10 @@ const writeData = (data: any) =>
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 
 const COIN_MAP: Record<string, string> = {
-    WIR: "bitcoin",
-    DOD: "ethereum",
-    ZVH: "solana",
-    TOR: "cardano"
+    BTC: "bitcoin",
+    ETH: "ethereum",
+    SOL: "solana",
+    ADA: "cardano"
 };
 
 async function updatePrices() {
