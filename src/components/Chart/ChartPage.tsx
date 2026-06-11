@@ -34,6 +34,9 @@ export default function ChartPage() {
                     `http://localhost:4000/history/${symbol}`
                 );
 
+                if (!res.ok) {
+                    throw new Error(`Server returned ${res.status}`);
+                }
                 const history = await res.json();
 
                 const formatted = history.map(
