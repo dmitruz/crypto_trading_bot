@@ -103,6 +103,10 @@ app.get("/history/:symbol", async (req, res) => {
     }
 });
 
+app.get("/prices", (req, res) => {
+    res.json(readData());
+});
+
 app.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
