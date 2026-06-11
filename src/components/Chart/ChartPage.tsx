@@ -34,14 +34,15 @@ export default function ChartPage() {
                     `http://localhost:4000/history/${symbol}`
                 );
 
+                if (!res.ok) {
+                    throw new Error(`Server returned ${res.status}`);
+                }
                 const history = await res.json();
 
-                const formatted = history.map(
-                    ([timestamp, price]: [number, number]) => ({
-                        date: new Date(timestamp).toLocaleDateString(),
-                        price
-                    })
-                );
+                const formatted = history.map((item: any) => ({
+                    date: new Date(item.date).toLocaleDateString(),
+                    price: item.price
+                }));
 
                 setData(formatted);
 
