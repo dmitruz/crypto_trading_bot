@@ -29,19 +29,23 @@ export default function ChartPage() {
         if (!symbol) return;
 
         const fetchHistory = async () => {
+
             try {
                 const res = await fetch(
                     `http://localhost:4000/history/${symbol}`
                 );
-
+                console.log("History status:", res.status);
                 const history = await res.json();
 
-                const formatted = history.map(
-                    ([timestamp, price]: [number, number]) => ({
-                        date: new Date(timestamp).toLocaleDateString(),
-                        price
-                    })
-                );
+                if (!Array.isArray(history)) {
+                    console.error("Invalid history response:", history);
+                    return;
+                }
+
+                const formatted = history.map((item: any) => ({
+                    date: new Date(item.date).toLocaleDateString(),
+                    price: item.price
+                }));
 
                 setData(formatted);
 

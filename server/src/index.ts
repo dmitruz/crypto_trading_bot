@@ -1,3 +1,4 @@
+console.log("SERVER STARTING");
 import express from "express";
 import cors from "cors";
 import fs from "fs";
@@ -15,59 +16,51 @@ const writeData = (data: any) =>
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 
 const COIN_MAP: Record<string, string> = {
-    BTC: "bitcoin",
-    ETH: "ethereum",
-    SOL: "solana",
-    ADA: "cardano"
+    BTC: "BTCUSDT",
+    ETH: "ETHUSDT",
+    SOL: "SOLUSDT",
+    ADA: "ADAUSDT"
 };
 
 async function updatePrices() {
     try {
-        const ids = Object.values(COIN_MAP).join(",");
-
-        const res = await axios.get(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-        );
-
-        const apiPrices = res.data;
         const data = readData();
 
-        if (!Object.keys(apiPrices).length) {
-            console.log("No API prices returned");
-            return;
-        }
+        for (const [symbol, pair] of Object.entries(COIN_MAP)) {
 
-        Object.entries(COIN_MAP).forEach(([symbol, realId]) => {
-            const price = apiPrices[realId]?.usd;
-            if (!price) return;
+            const response = await axios.get(
+                "https://api.binance.com/api/v3/ticker/price",
+                {
+                    params: {
+                        symbol: pair
+                    }
+                }
+            );
+
+            const price = Number(response.data.price);
 
             if (!data[symbol]) {
                 data[symbol] = [];
             }
 
-
-            const randomMove = price * ((Math.random() - 0.5) * 0.01);
-
             data[symbol].push({
                 date: new Date().toISOString(),
-                price: Number((price + randomMove).toFixed(2))
+                price
             });
 
             if (data[symbol].length > 365) {
                 data[symbol].shift();
             }
-        });
+        }
 
         writeData(data);
 
         console.log("Prices updated");
+
     } catch (err) {
-        console.error("Error fetching prices:", err);
+        console.error("Binance error:", err);
     }
 }
-updatePrices();
-
-setInterval(updatePrices, 10_000);
 
 app.get("/prices", (req, res) => {
     res.json(readData());
@@ -81,32 +74,50 @@ app.get("/prices/:symbol", (req, res) => {
 });
 
 app.get("/history/:symbol", async (req, res) => {
+
     const symbol = req.params.symbol.toUpperCase();
 
-    const coinId = COIN_MAP[symbol];
+    const pair = COIN_MAP[symbol];
 
-    if (!coinId) {
-        return res.status(404).json({ error: "Unknown coin" });
+    if (!pair) {
+        return res.status(404).json({
+            error: "Unknown symbol"
+        });
     }
 
     try {
+
         const response = await axios.get(
-            `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart`,
+            "https://api.binance.com/api/v3/klines",
             {
                 params: {
-                    vs_currency: "usd",
-                    days: 30
+                    symbol: pair,
+                    interval: "1d",
+                    limit: 365
                 }
             }
         );
 
-        res.json(response.data.prices);
+        const history = response.data.map((candle: any[]) => ({
+            date: candle[0],
+            price: Number(candle[4])
+        }));
 
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch history" });
+        res.json(history);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            error: "Failed to fetch Binance history"
+        });
     }
 });
+
+updatePrices();
+
+setInterval(updatePrices, 10000);
 
 app.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
