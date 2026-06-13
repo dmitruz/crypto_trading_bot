@@ -15,7 +15,12 @@ export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
         const fetchPrices = async () => {
             try {
                 const res = await fetch("http://localhost:4000/prices");
+
+                console.log("STATUS:", res.status);
+
                 const data = await res.json();
+
+                console.log("DATA:", data);
 
                 const mapped: AssetPrice[] = Object.keys(data)
                     .filter(symbol => data[symbol]?.length > 0)

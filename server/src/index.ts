@@ -26,18 +26,14 @@ async function updatePrices() {
     try {
         const data = readData();
 
-        for (const [symbol, pair] of Object.entries(COIN_MAP)) {
+        if (!Object.keys(apiPrices).length) {
+            console.log("No API prices returned");
+            return;
+        }
 
-            const response = await axios.get(
-                "https://api.binance.com/api/v3/ticker/price",
-                {
-                    params: {
-                        symbol: pair
-                    }
-                }
-            );
-
-            const price = Number(response.data.price);
+        Object.entries(COIN_MAP).forEach(([symbol, realId]) => {
+            const price = apiPrices[realId]?.usd;
+            if (!price) return;
 
             if (!data[symbol]) {
                 data[symbol] = [];
@@ -61,6 +57,9 @@ async function updatePrices() {
         console.error("Binance error:", err);
     }
 }
+updatePrices();
+
+setInterval(updatePrices, 10_000);
 
 app.get("/prices", (req, res) => {
     res.json(readData());
@@ -113,6 +112,10 @@ app.get("/history/:symbol", async (req, res) => {
             error: "Failed to fetch Binance history"
         });
     }
+});
+
+app.get("/prices", (req, res) => {
+    res.json(readData());
 });
 
 updatePrices();
