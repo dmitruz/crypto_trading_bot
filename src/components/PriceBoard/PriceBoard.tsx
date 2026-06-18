@@ -10,12 +10,17 @@ interface PricesBoardProps {
     setPrices: React.Dispatch<React.SetStateAction<AssetPrice[]>>;
 }
 
+interface SocketPrice {
+    symbol: string;
+    price: number;
+}
+
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
 
     useEffect(() => {
-        socket.on("prices", (prices) => {
+        socket.on("prices", (prices: SocketPrice[]) => {
 
-            const mapped = prices.map((p: any) => ({
+            const mapped: AssetPrice[] = prices.map((p) => ({
                 id: p.symbol.toLowerCase(),
                 label: p.symbol,
                 price: p.price,
@@ -30,7 +35,6 @@ export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
         return () => {
             socket.off("prices");
         };
-
     }, [setPrices]);
     return (
         <section className="prices-board">
