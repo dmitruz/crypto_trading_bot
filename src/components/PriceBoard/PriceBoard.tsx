@@ -1,3 +1,4 @@
+import { socket } from "../../services/socket";
 import { useEffect } from "react";
 import PriceTile from "./PriceTile";
 import { AssetPrice } from "./types";
@@ -9,47 +10,31 @@ interface PricesBoardProps {
     setPrices: React.Dispatch<React.SetStateAction<AssetPrice[]>>;
 }
 
+interface SocketPrice {
+    symbol: string;
+    price: number;
+}
+
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
 
     useEffect(() => {
-        const fetchPrices = async () => {
-            try {
-                const res = await fetch("http://localhost:4000/prices");
+        socket.on("prices", (prices: SocketPrice[]) => {
 
-                console.log("STATUS:", res.status);
+            const mapped: AssetPrice[] = prices.map((p) => ({
+                id: p.symbol.toLowerCase(),
+                label: p.symbol,
+                price: p.price,
+                minChange: p.price * 0.01,
+                maxChange: p.price * 0.03,
+                decimals: p.price < 1 ? 3 : 2
+            }));
 
-                const data = await res.json();
+            setPrices(mapped);
+        });
 
-                console.log("DATA:", data);
-
-                const mapped: AssetPrice[] = Object.keys(data)
-                    .filter(symbol => data[symbol]?.length > 0)
-                    .map(symbol => {
-                        const history = data[symbol];
-                        const last = history[history.length - 1];
-
-                        return {
-                            id: symbol.toLowerCase(),
-                            label: symbol,
-                            price: last.price,
-                            minChange: last.price * 0.01,
-                            maxChange: last.price * 0.03,
-                            decimals: last.price < 1 ? 3 : 2
-                        };
-                    });
-
-                setPrices(mapped);
-
-            } catch (err) {
-                console.error("Failed to fetch prices", err);
-            }
+        return () => {
+            socket.off("prices");
         };
-
-        fetchPrices();
-
-        const interval = setInterval(fetchPrices, 60_000);
-        console.log(prices)
-        return () => clearInterval(interval);
     }, [setPrices]);
     return (
         <section className="prices-board">

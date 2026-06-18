@@ -1,11 +1,18 @@
 
-console.log("SERVER STARTING");
+import { Server } from "socket.io";
+import { createServer } from "http";
 import express from "express";
 import cors from "cors";
 import fs from "fs";
 import axios from "axios";
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 app.use(cors());
 
 const DATA_PATH = "./data/prices.json";
@@ -55,8 +62,17 @@ async function updatePrices() {
         }
 
         writeData(data);
+        const latestPrices = Object.keys(data).map(symbol => {
+            const history = data[symbol];
+            const last = history[history.length - 1];
 
-        console.log("Prices updated");
+            return {
+                symbol,
+                price: last.price
+            };
+        });
+
+        io.emit("prices", latestPrices);
 
     } catch (err) {
         console.error("Binance error:", err);
@@ -121,6 +137,6 @@ updatePrices();
 
 setInterval(updatePrices, 10000);
 
-app.listen(4000, () => {
+httpServer.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
