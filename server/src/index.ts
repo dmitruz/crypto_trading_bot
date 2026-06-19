@@ -84,6 +84,10 @@ ws.on("message", (message) => {
     console.log(symbol, price);
 });
 
+io.on("connection", (socket) => {
+    console.log("Frontend connected:", socket.id);
+});
+
 httpServer.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });

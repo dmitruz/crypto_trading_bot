@@ -1,6 +1,8 @@
+
 import { useEffect } from "react";
 import PriceTile from "./PriceTile";
 import { AssetPrice } from "./types";
+import { socket } from "../../services/socket";
 import "./PriceBoard.scss";
 
 
@@ -12,44 +14,43 @@ interface PricesBoardProps {
 export default function PricesBoard({ prices, setPrices }: PricesBoardProps) {
 
     useEffect(() => {
-        const fetchPrices = async () => {
-            try {
-                const res = await fetch("http://localhost:4000/prices");
 
-                console.log("STATUS:", res.status);
+        socket.on("prices", (incomingPrices) => {
 
-                const data = await res.json();
+            setPrices(prev => {
 
-                console.log("DATA:", data);
+                const updated = [...prev];
 
-                const mapped: AssetPrice[] = Object.keys(data)
-                    .filter(symbol => data[symbol]?.length > 0)
-                    .map(symbol => {
-                        const history = data[symbol];
-                        const last = history[history.length - 1];
+                incomingPrices.forEach((p: any) => {
 
-                        return {
-                            id: symbol.toLowerCase(),
-                            label: symbol,
-                            price: last.price,
-                            minChange: last.price * 0.01,
-                            maxChange: last.price * 0.03,
-                            decimals: last.price < 1 ? 3 : 2
-                        };
-                    });
+                    const asset = {
+                        id: p.symbol.toLowerCase(),
+                        label: p.symbol,
+                        price: p.price,
+                        minChange: p.price * 0.01,
+                        maxChange: p.price * 0.03,
+                        decimals: p.price < 1 ? 3 : 2
+                    };
 
-                setPrices(mapped);
+                    const existingIndex = updated.findIndex(
+                        item => item.label === p.symbol
+                    );
 
-            } catch (err) {
-                console.error("Failed to fetch prices", err);
-            }
+                    if (existingIndex >= 0) {
+                        updated[existingIndex] = asset;
+                    } else {
+                        updated.push(asset);
+                    }
+                });
+
+                return [...updated];
+            });
+        });
+
+        return () => {
+            socket.off("prices");
         };
 
-        fetchPrices();
-
-        const interval = setInterval(fetchPrices, 60_000);
-        console.log(prices)
-        return () => clearInterval(interval);
     }, [setPrices]);
     return (
         <section className="prices-board">
