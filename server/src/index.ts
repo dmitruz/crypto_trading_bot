@@ -1,11 +1,22 @@
 
 console.log("SERVER STARTING");
+import { Server } from "socket.io";
+import { createServer } from "http";
+import WebSocket from "ws";
+import axios from "axios";
 import express from "express";
 import cors from "cors";
 import fs from "fs";
-import axios from "axios";
 
 const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
+
 app.use(cors());
 
 const DATA_PATH = "./data/prices.json";
@@ -23,104 +34,56 @@ const COIN_MAP: Record<string, string> = {
     ADA: "ADAUSDT"
 };
 
-async function updatePrices() {
-    try {
-        const data = readData();
+const streams = Object.values(COIN_MAP)
+    .map(pair => `${pair.toLowerCase()}@trade`)
+    .join("/");
 
-        for (const [symbol, pair] of Object.entries(COIN_MAP)) {
+const ws = new WebSocket(
+    `wss://stream.binance.com:9443/stream?streams=${streams}`
+);
 
-            const response = await axios.get(
-                "https://api.binance.com/api/v3/ticker/price",
-                {
-                    params: {
-                        symbol: pair
-                    }
-                }
-            );
+ws.on("message", (message) => {
 
-            const price = Number(response.data.price);
+    const parsed = JSON.parse(message.toString());
 
-            if (!data[symbol]) {
-                data[symbol] = [];
-            }
+    const streamData = parsed.data;
 
-            data[symbol].push({
-                date: new Date().toISOString(),
-                price
-            });
+    const pair = streamData.s;
+    const price = Number(streamData.p);
 
-            if (data[symbol].length > 365) {
-                data[symbol].shift();
-            }
-        }
+    const symbol = Object.keys(COIN_MAP).find(
+        key => COIN_MAP[key] === pair
+    );
 
-        writeData(data);
+    if (!symbol) return;
 
-        console.log("Prices updated");
-
-    } catch (err) {
-        console.error("Binance error:", err);
-    }
-}
-
-app.get("/prices", (req, res) => {
-    res.json(readData());
-});
-
-app.get("/prices/:symbol", (req, res) => {
     const data = readData();
-    const symbol = req.params.symbol;
 
-    res.json(data[symbol] || []);
-});
-
-app.get("/history/:symbol", async (req, res) => {
-
-    const symbol = req.params.symbol.toUpperCase();
-
-    const pair = COIN_MAP[symbol];
-
-    if (!pair) {
-        return res.status(404).json({
-            error: "Unknown symbol"
-        });
+    if (!data[symbol]) {
+        data[symbol] = [];
     }
 
-    try {
+    data[symbol].push({
+        date: new Date().toISOString(),
+        price
+    });
 
-        const response = await axios.get(
-            "https://api.binance.com/api/v3/klines",
-            {
-                params: {
-                    symbol: pair,
-                    interval: "1d",
-                    limit: 365
-                }
-            }
-        );
-
-        const history = response.data.map((candle: any[]) => ({
-            date: candle[0],
-            price: Number(candle[4])
-        }));
-
-        res.json(history);
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            error: "Failed to fetch Binance history"
-        });
+    if (data[symbol].length > 365) {
+        data[symbol].shift();
     }
+
+    writeData(data);
+
+    io.emit("prices", [
+        {
+            symbol,
+            price
+        }
+    ]);
+
+    console.log(symbol, price);
 });
 
-
-updatePrices();
-
-setInterval(updatePrices, 10000);
-
-app.listen(4000, () => {
+httpServer.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
