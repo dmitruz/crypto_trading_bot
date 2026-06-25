@@ -9,6 +9,27 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import WebSocket from "ws";
 
+
+interface Position {
+    symbol: string;
+    buyPrice: number;
+    quantity: number;
+    openedAt: string;
+}
+
+const openPositions: Position[] = [];
+
+interface Trade {
+    symbol: string;
+    type: "BUY" | "SELL";
+    price: number;
+    quantity: number;
+    profit?: number;
+    time: string;
+}
+
+const tradeHistory: Trade[] = [];
+
 const app = express();
 
 const httpServer = createServer(app);
@@ -57,6 +78,87 @@ ws.on("message", (message) => {
     const pair = streamData.s;
 
     const price = Number(streamData.p);
+
+    const existingPosition = openPositions.find(
+        p => p.symbol === symbol
+    );
+    // Buy logic
+    if (!existingPosition) {
+
+        const shouldBuy = Math.random() > 0.995;
+
+        if (shouldBuy) {
+
+            const position = {
+                symbol,
+                buyPrice: price,
+                quantity: 1,
+                openedAt: new Date().toISOString()
+            };
+
+            openPositions.push(position);
+
+            const trade = {
+                symbol,
+                type: "BUY" as const,
+                price,
+                quantity: 1,
+                time: new Date().toISOString()
+            };
+
+            tradeHistory.push(trade);
+
+            io.emit("trade", trade);
+
+            console.log("BUY", symbol, price);
+        }
+    }
+    // sell logic
+    if (existingPosition) {
+
+        const profitPercent =
+            ((price - existingPosition.buyPrice)
+                / existingPosition.buyPrice) * 100;
+
+        const shouldSell =
+            profitPercent >= 1 || profitPercent <= -1;
+
+        if (shouldSell) {
+
+            const profit =
+                (price - existingPosition.buyPrice)
+                * existingPosition.quantity;
+
+            const trade = {
+                symbol,
+                type: "SELL" as const,
+                price,
+                quantity: existingPosition.quantity,
+                profit,
+                time: new Date().toISOString()
+            };
+
+            tradeHistory.push(trade);
+
+            io.emit("trade", trade);
+
+            const index = openPositions.findIndex(
+                p => p.symbol === symbol
+            );
+
+            if (index >= 0) {
+                openPositions.splice(index, 1);
+            }
+
+            console.log(
+                "SELL",
+                symbol,
+                price,
+                "Profit:",
+                profit.toFixed(2)
+            );
+        }
+    }
 
     const symbol = Object.keys(COIN_MAP).find(
         key => COIN_MAP[key] === pair
