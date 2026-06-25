@@ -1,0 +1,25 @@
+.trade-history {
+    margin-top: 30px;
+    padding: 20px;
+    background: #111;
+    border-radius: 12px;
+    color: white;
+}
+
+.trade-item {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.trade-item.buy {
+    color: #2ecc71;
+}
+
+.trade-item.sell {
+    color: #e74c3c;
+}
+
+.trade-time {
+    font-size: 12px;
+    opacity: 0.7;
+}

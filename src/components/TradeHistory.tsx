@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "../services/socket";
+import "./TradeHistory.scss";
 
 interface Trade {
     symbol: string;

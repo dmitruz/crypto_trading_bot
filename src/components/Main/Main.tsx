@@ -7,6 +7,7 @@ import { Asset } from "../../tradingEngine/TradingEngine";
 import { googleLogout } from "@react-oauth/google";
 import GoogleAuthButton from "../Auth/GoogleAuthButton";
 import { GoogleUser } from "../../App";
+import TradeHistory from "../TradeHistory";
 
 import "./Main.scss";
 
@@ -75,6 +76,7 @@ export default function Main({ user, setUser }: Props) {
             }
 
             <BalanceView balance={balance} profit={profit} />
+            <TradeHistory />
             <h1>Trading Bot FINA</h1>
 
             <div className="controls">
@@ -94,6 +96,7 @@ export default function Main({ user, setUser }: Props) {
                     Stop Trading
                 </button>
             </div>
+
         </main >
     );
 }

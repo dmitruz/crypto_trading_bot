@@ -79,6 +79,12 @@ ws.on("message", (message) => {
 
     const price = Number(streamData.p);
 
+    const symbol = Object.keys(COIN_MAP).find(
+        key => COIN_MAP[key] === pair
+    );
+
+    if (!symbol) return;
+
     const existingPosition = openPositions.find(
         p => p.symbol === symbol
     );
@@ -160,11 +166,6 @@ ws.on("message", (message) => {
         }
     }
 
-    const symbol = Object.keys(COIN_MAP).find(
-        key => COIN_MAP[key] === pair
-    );
-
-    if (!symbol) return;
 
     const data = readData();
 
