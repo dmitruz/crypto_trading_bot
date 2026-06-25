@@ -42,6 +42,10 @@ const ws = new WebSocket(
     `wss://stream.binance.com:9443/stream?streams=${streams}`
 );
 
+ws.on("open", () => {
+    console.log("Connected to Binance WebSocket");
+});
+
 ws.on("message", (message) => {
 
     const parsed = JSON.parse(message.toString());
@@ -49,6 +53,7 @@ ws.on("message", (message) => {
     const streamData = parsed.data;
 
     const pair = streamData.s;
+
     const price = Number(streamData.p);
 
     const symbol = Object.keys(COIN_MAP).find(
@@ -84,8 +89,75 @@ ws.on("message", (message) => {
     console.log(symbol, price);
 });
 
+ws.on("error", (err) => {
+    console.error("Binance WS Error:", err);
+});
+
 io.on("connection", (socket) => {
+
     console.log("Frontend connected:", socket.id);
+
+    const data = readData();
+
+    const latestPrices = Object.keys(data).map(symbol => {
+
+        const history = data[symbol];
+
+        const last = history[history.length - 1];
+
+        return {
+            symbol,
+            price: last?.price || 0
+        };
+    });
+
+    socket.emit("prices", latestPrices);
+});
+
+app.get("/prices", (req, res) => {
+    res.json(readData());
+});
+
+app.get("/history/:symbol", async (req, res) => {
+
+    const symbol = req.params.symbol.toUpperCase();
+
+    const pair = COIN_MAP[symbol];
+
+    if (!pair) {
+        return res.status(404).json({
+            error: "Unknown symbol"
+        });
+    }
+
+    try {
+
+        const response = await axios.get(
+            "https://api.binance.com/api/v3/klines",
+            {
+                params: {
+                    symbol: pair,
+                    interval: "1m",
+                    limit: 100
+                }
+            }
+        );
+
+        const history = response.data.map((candle: any[]) => ({
+            date: candle[0],
+            price: Number(candle[4])
+        }));
+
+        res.json(history);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            error: "Failed to fetch Binance history"
+        });
+    }
 });
 
 httpServer.listen(4000, () => {
