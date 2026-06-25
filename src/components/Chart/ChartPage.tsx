@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -16,8 +15,6 @@ interface HistoryPoint {
     price: number;
 }
 
-
-
 export default function ChartPage() {
 
     const { symbol } = useParams();
@@ -31,25 +28,20 @@ export default function ChartPage() {
         const fetchHistory = async () => {
 
             try {
+
                 const res = await fetch(
                     `http://localhost:4000/history/${symbol}`
                 );
-                console.log("History status:", res.status);
+
                 const history = await res.json();
 
-                if (!Array.isArray(history)) {
-                    console.error("Invalid history response:", history);
-                    return;
-                }
-
                 const formatted = history.map((item: any) => ({
-                    date: new Date(item.date).toLocaleDateString(),
+                    date: new Date(item.date).toLocaleTimeString(),
                     price: item.price
                 }));
 
                 setData(formatted);
 
-                console.log(formatted);
             } catch (err) {
                 console.error(err);
             }
@@ -64,19 +56,21 @@ export default function ChartPage() {
     }
 
     return (
-        <div style={{ width: "100%", height: "100vh", padding: 40 }}>
+        <div style={{
+            width: "100%",
+            height: "100vh",
+            padding: 40
+        }}>
 
             <h2>{symbol} Chart</h2>
 
             <ResponsiveContainer width="100%" height={400}>
 
                 <LineChart data={data}>
-                    <XAxis dataKey="date"
-                        minTickGap={50} />
 
-                    <YAxis
-                        domain={["dataMin", "dataMax"]}
-                    />
+                    <XAxis dataKey="date" />
+
+                    <YAxis domain={["dataMin", "dataMax"]} />
 
                     <Tooltip />
 
@@ -87,10 +81,11 @@ export default function ChartPage() {
                         strokeWidth={2}
                         dot={false}
                     />
+
                 </LineChart>
 
             </ResponsiveContainer>
 
         </div>
     );
-};
+}
