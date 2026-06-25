@@ -1,22 +1,33 @@
 
+<<<<<<< HEAD
 console.log("SERVER STARTING");
 import { Server } from "socket.io";
 import { createServer } from "http";
 import WebSocket from "ws";
 import axios from "axios";
+=======
+import { Server } from "socket.io";
+import { createServer } from "http";
+>>>>>>> 2dd4ce805b7aad3bc55bbf21d9d39ac546ff058b
 import express from "express";
 import cors from "cors";
 import fs from "fs";
 
 const app = express();
 const httpServer = createServer(app);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2dd4ce805b7aad3bc55bbf21d9d39ac546ff058b
 const io = new Server(httpServer, {
     cors: {
         origin: "http://localhost:3000"
     }
 });
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2dd4ce805b7aad3bc55bbf21d9d39ac546ff058b
 app.use(cors());
 
 const DATA_PATH = "./data/prices.json";
@@ -54,11 +65,26 @@ ws.on("message", (message) => {
 
     const pair = streamData.s;
 
+<<<<<<< HEAD
     const price = Number(streamData.p);
 
     const symbol = Object.keys(COIN_MAP).find(
         key => COIN_MAP[key] === pair
     );
+=======
+        writeData(data);
+        const latestPrices = Object.keys(data).map(symbol => {
+            const history = data[symbol];
+            const last = history[history.length - 1];
+
+            return {
+                symbol,
+                price: last.price
+            };
+        });
+
+        io.emit("prices", latestPrices);
+>>>>>>> 2dd4ce805b7aad3bc55bbf21d9d39ac546ff058b
 
     if (!symbol) return;
 
@@ -160,6 +186,14 @@ app.get("/history/:symbol", async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
+=======
+
+updatePrices();
+
+setInterval(updatePrices, 10000);
+
+>>>>>>> 2dd4ce805b7aad3bc55bbf21d9d39ac546ff058b
 httpServer.listen(4000, () => {
     console.log("Server running on http://localhost:4000");
 });
