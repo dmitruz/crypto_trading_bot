@@ -29,6 +29,7 @@ interface Trade {
 }
 
 const tradeHistory: Trade[] = [];
+let tradingEnabled = false;
 
 const app = express();
 
@@ -88,7 +89,7 @@ ws.on("message", (message) => {
         p => p.symbol === symbol
     );
     // Buy logic
-    if (!existingPosition) {
+    if (tradingEnabled && !existingPosition) {
 
         const shouldBuy = Math.random() > 0.995;
 
@@ -119,7 +120,7 @@ ws.on("message", (message) => {
         }
     }
     // sell logic
-    if (existingPosition) {
+    if (tradingEnabled && existingPosition) {
 
         const profitPercent =
             ((price - existingPosition.buyPrice)
@@ -174,14 +175,19 @@ ws.on("message", (message) => {
         liveHistory[symbol].shift();
     }
 
-    io.emit("prices", [
-        {
-            symbol,
-            price
-        }
-    ]);
+    const latestPrices = Object.keys(liveHistory).map(sym => {
 
-    console.log(symbol, price);
+        const history = liveHistory[sym];
+
+        const last = history[history.length - 1];
+
+        return {
+            symbol: sym,
+            price: last?.price || 0
+        };
+    });
+
+    io.emit("prices", latestPrices);
 });
 
 ws.on("error", (err) => {
@@ -251,6 +257,28 @@ app.get("/history/:symbol", async (req, res) => {
             error: "Failed to fetch Binance history"
         });
     }
+});
+
+app.post("/start-trading", (req, res) => {
+
+    tradingEnabled = true;
+
+    console.log("Trading started");
+
+    res.json({
+        success: true
+    });
+});
+
+app.post("/stop-trading", (req, res) => {
+
+    tradingEnabled = false;
+
+    console.log("Trading stopped");
+
+    res.json({
+        success: true
+    });
 });
 
 httpServer.listen(4000, () => {

@@ -16,6 +16,26 @@ interface Props {
     setUser: React.Dispatch<React.SetStateAction<GoogleUser | null>>;
 }
 
+const startTrading = async () => {
+
+    await fetch(
+        "http://localhost:4000/start-trading",
+        {
+            method: "POST"
+        }
+    );
+};
+
+const stopTrading = async () => {
+
+    await fetch(
+        "http://localhost:4000/stop-trading",
+        {
+            method: "POST"
+        }
+    );
+};
+
 export default function Main({ user, setUser }: Props) {
     const [balance, setBalance] = useState(1000);
     const [profit, setProfit] = useState(0);
@@ -80,19 +100,11 @@ export default function Main({ user, setUser }: Props) {
             <h1>Trading Bot FINA</h1>
 
             <div className="controls">
-                <button
-                    onClick={bot.start}
-                    disabled={bot.running}
-                    className="start"
-                >
+                <button onClick={startTrading}>
                     Start Trading
                 </button>
 
-                <button
-                    onClick={bot.stop}
-                    disabled={!bot.running}
-                    className="stop"
-                >
+                <button onClick={stopTrading}>
                     Stop Trading
                 </button>
             </div>
