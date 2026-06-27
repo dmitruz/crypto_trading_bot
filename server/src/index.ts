@@ -42,13 +42,12 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 
-const DATA_PATH = "./data/prices.json";
-
-const readData = () =>
-    JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
-
-const writeData = (data: any) =>
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+const liveHistory: Record<string, any[]> = {
+    BTC: [],
+    ETH: [],
+    SOL: [],
+    ADA: []
+};
 
 const COIN_MAP: Record<string, string> = {
     BTC: "BTCUSDT",
@@ -166,23 +165,14 @@ ws.on("message", (message) => {
         }
     }
 
-
-    const data = readData();
-
-    if (!data[symbol]) {
-        data[symbol] = [];
-    }
-
-    data[symbol].push({
+    liveHistory[symbol].push({
         date: new Date().toISOString(),
         price
     });
 
-    if (data[symbol].length > 365) {
-        data[symbol].shift();
+    if (liveHistory[symbol].length > 1000) {
+        liveHistory[symbol].shift();
     }
-
-    writeData(data);
 
     io.emit("prices", [
         {
@@ -202,11 +192,9 @@ io.on("connection", (socket) => {
 
     console.log("Frontend connected:", socket.id);
 
-    const data = readData();
+    const latestPrices = Object.keys(liveHistory).map(symbol => {
 
-    const latestPrices = Object.keys(data).map(symbol => {
-
-        const history = data[symbol];
+        const history = liveHistory[symbol];
 
         const last = history[history.length - 1];
 
@@ -220,7 +208,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/prices", (req, res) => {
-    res.json(readData());
+    res.json(liveHistory);
 });
 
 app.get("/history/:symbol", async (req, res) => {
