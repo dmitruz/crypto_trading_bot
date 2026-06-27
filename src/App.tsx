@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ChartPage from "./components/Chart/ChartPage";
 import Navbar from "./components/Navbar";
 import Main from "./components/Main";
+import TradesPage from "./pages/TradesPage";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export interface GoogleUser {
@@ -31,6 +32,11 @@ export default function App() {
           <Route
             path="/chart/:symbol"
             element={<ChartPage />}
+          />
+
+          <Route
+            path="/trades"
+            element={<TradesPage />}
           />
 
         </Routes>

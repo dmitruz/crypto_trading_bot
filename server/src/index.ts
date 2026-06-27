@@ -259,6 +259,10 @@ app.get("/history/:symbol", async (req, res) => {
     }
 });
 
+app.get("/trades", (req, res) => {
+    res.json(tradeHistory);
+});
+
 app.post("/start-trading", (req, res) => {
 
     tradingEnabled = true;

@@ -96,7 +96,6 @@ export default function Main({ user, setUser }: Props) {
             }
 
             <BalanceView balance={balance} profit={profit} />
-            <TradeHistory />
             <h1>Trading Bot FINA</h1>
 
             <div className="controls">
@@ -108,6 +107,7 @@ export default function Main({ user, setUser }: Props) {
                     Stop Trading
                 </button>
             </div>
+            <TradeHistory />
 
         </main >
     );
