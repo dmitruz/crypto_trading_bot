@@ -10,10 +10,21 @@ import { Server } from "socket.io";
 import WebSocket from "ws";
 
 
+let usdBalance = 1000;
+
+let realizedProfit = 0;
+
+let unrealizedProfit = 0;
+
 interface Position {
     symbol: string;
+
     buyPrice: number;
+
     quantity: number;
+
+    investedUsd: number;
+
     openedAt: string;
 }
 
@@ -88,38 +99,74 @@ ws.on("message", (message) => {
     const existingPosition = openPositions.find(
         p => p.symbol === symbol
     );
-    // Buy logic
+
+    // =========================
+    // BUY LOGIC
+    // =========================
+
     if (tradingEnabled && !existingPosition) {
 
         const shouldBuy = Math.random() > 0.995;
 
         if (shouldBuy) {
 
-            const position = {
-                symbol,
-                buyPrice: price,
-                quantity: 1,
-                openedAt: new Date().toISOString()
-            };
+            const tradeAmountUsd = 50;
 
-            openPositions.push(position);
+            if (usdBalance >= tradeAmountUsd) {
 
-            const trade = {
-                symbol,
-                type: "BUY" as const,
-                price,
-                quantity: 1,
-                time: new Date().toISOString()
-            };
+                const quantity =
+                    tradeAmountUsd / price;
 
-            tradeHistory.push(trade);
+                usdBalance -= tradeAmountUsd;
 
-            io.emit("trade", trade);
+                const position = {
+                    symbol,
 
-            console.log("BUY", symbol, price);
+                    buyPrice: price,
+
+                    quantity,
+
+                    investedUsd: tradeAmountUsd,
+
+                    openedAt: new Date().toISOString()
+                };
+
+                openPositions.push(position);
+
+                const trade = {
+                    symbol,
+
+                    type: "BUY" as const,
+
+                    price,
+
+                    quantity,
+
+                    investedUsd: tradeAmountUsd,
+
+                    time: new Date().toISOString()
+                };
+
+                tradeHistory.push(trade);
+
+                io.emit("trade", trade);
+
+                console.log(
+                    "BUY",
+                    symbol,
+                    "Spent:",
+                    tradeAmountUsd,
+                    "Qty:",
+                    quantity
+                );
+            }
         }
     }
-    // sell logic
+
+    // =========================
+    // SELL LOGIC
+    // =========================
+
     if (tradingEnabled && existingPosition) {
 
         const profitPercent =
@@ -131,16 +178,33 @@ ws.on("message", (message) => {
 
         if (shouldSell) {
 
+            const currentValue =
+                price * existingPosition.quantity;
+
             const profit =
-                (price - existingPosition.buyPrice)
-                * existingPosition.quantity;
+                currentValue
+                - existingPosition.investedUsd;
+
+            usdBalance += currentValue;
+
+            realizedProfit += profit;
 
             const trade = {
                 symbol,
+
                 type: "SELL" as const,
+
                 price,
+
                 quantity: existingPosition.quantity,
+
+                investedUsd:
+                    existingPosition.investedUsd,
+
+                returnedUsd: currentValue,
+
                 profit,
+
                 time: new Date().toISOString()
             };
 
@@ -159,12 +223,40 @@ ws.on("message", (message) => {
             console.log(
                 "SELL",
                 symbol,
-                price,
                 "Profit:",
                 profit.toFixed(2)
             );
         }
     }
+
+    // =========================
+    // LIVE PROFIT
+    // =========================
+
+    unrealizedProfit = openPositions.reduce(
+        (total, position) => {
+
+            const currentPrice =
+                position.symbol === symbol
+                    ? price
+                    : position.buyPrice;
+
+            const currentValue =
+                currentPrice * position.quantity;
+
+            const pnl =
+                currentValue
+                - position.investedUsd;
+
+            return total + pnl;
+
+        },
+        0
+    );
+
+    // =========================
+    // PRICE HISTORY
+    // =========================
 
     liveHistory[symbol].push({
         date: new Date().toISOString(),
@@ -175,23 +267,36 @@ ws.on("message", (message) => {
         liveHistory[symbol].shift();
     }
 
-    const latestPrices = Object.keys(liveHistory).map(sym => {
+    // =========================
+    // LIVE PRICES
+    // =========================
 
-        const history = liveHistory[sym];
+    const latestPrices = Object.keys(liveHistory)
+        .map(sym => {
 
-        const last = history[history.length - 1];
+            const history = liveHistory[sym];
 
-        return {
-            symbol: sym,
-            price: last?.price || 0
-        };
-    });
+            const last =
+                history[history.length - 1];
+
+            return {
+                symbol: sym,
+                price: last?.price || 0
+            };
+        });
 
     io.emit("prices", latestPrices);
-});
 
-ws.on("error", (err) => {
-    console.error("Binance WS Error:", err);
+    // =========================
+    // PORTFOLIO UPDATE
+    // =========================
+
+    io.emit("portfolio", {
+        balance: usdBalance,
+
+        profit:
+            realizedProfit + unrealizedProfit
+    });
 });
 
 io.on("connection", (socket) => {
