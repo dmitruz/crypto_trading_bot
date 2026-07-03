@@ -1,19 +1,21 @@
-import { useState } from "react";
-import { useTradingBot } from "../../tradingEngine/TradingBot";
+import { useState, useEffect } from "react";
 import BalanceView from "../Balance";
 import PriceBoard from "../PriceBoard/PriceBoard";
 import { AssetPrice } from "../PriceBoard/types";
-import { Asset } from "../../tradingEngine/TradingEngine";
 import { googleLogout } from "@react-oauth/google";
 import GoogleAuthButton from "../Auth/GoogleAuthButton";
 import { GoogleUser } from "../../App";
 import TradeHistory from "../TradeHistory";
+import { socket } from "../../services/socket";
 
 import "./Main.scss";
 
 interface Props {
     user: GoogleUser | null;
-    setUser: React.Dispatch<React.SetStateAction<GoogleUser | null>>;
+
+    setUser: React.Dispatch<
+        React.SetStateAction<GoogleUser | null>
+    >;
 }
 
 const startTrading = async () => {
@@ -36,79 +38,112 @@ const stopTrading = async () => {
     );
 };
 
-export default function Main({ user, setUser }: Props) {
-    const [balance, setBalance] = useState(1000);
-    const [profit, setProfit] = useState(0);
-    const [prices, setPrices] = useState<AssetPrice[]>([]);
-    const [currentAsset, setCurrentAsset] = useState<string | null>(null);
+export default function Main({
+    user,
+    setUser
+}: Props) {
 
-    const assets: Asset[] = prices.map(p => ({
-        symbol: p.label,
+    const [balance, setBalance] =
+        useState(1000);
 
-        min: p.price - p.maxChange * 5,
-        max: p.price + p.maxChange * 5,
+    const [profit, setProfit] =
+        useState(0);
 
-        step: Number((p.maxChange - p.minChange).toFixed(p.decimals))
-    }));
-    const bot = useTradingBot(
-        balance,
-        profit,
-        assets,
-        (b, p) => {
-            setBalance(b);
-            setProfit(p);
-        },
-        (asset) => setCurrentAsset(asset),
-        () => setCurrentAsset(null)
-    );
+    const [prices, setPrices] =
+        useState<AssetPrice[]>([]);
 
-    {
-    }
+    useEffect(() => {
+
+        socket.on("portfolio", (data) => {
+
+            setBalance(data.balance);
+
+            setProfit(data.profit);
+        });
+
+        return () => {
+            socket.off("portfolio");
+        };
+
+    }, []);
 
     return (
+
         <main className="main">
+
             {!user ? (
-                <GoogleAuthButton onLogin={setUser} />
+
+                <GoogleAuthButton
+                    onLogin={setUser}
+                />
+
             ) : (
+
                 <div className="user-container">
+
                     <div className="user-bar">
-                        <img src={user.picture} width={32} />
-                        <span>{user.name}</span>
 
-                        <button onClick={() => {
-                            googleLogout();
-                            setUser(null)
-                        }}>Logout
+                        <img
+                            src={user.picture}
+                            width={32}
+                        />
+
+                        <span>
+                            {user.name}
+                        </span>
+
+                        <button
+                            onClick={() => {
+
+                                googleLogout();
+
+                                setUser(null);
+                            }}
+                        >
+                            Logout
                         </button>
+
                     </div>
+
                 </div>
-            )
-            }
-            <PriceBoard prices={prices} setPrices={setPrices} />
-            {!prices.length && <div>Loading prices...</div>}
+            )}
 
+            <PriceBoard
+                prices={prices}
+                setPrices={setPrices}
+            />
 
-            {currentAsset && (
-                <div className="current-asset">
-                    You’ve purchased: <strong>{currentAsset}</strong>
-                </div>
-            )
-            }
+            {!prices.length && (
+                <div>Loading prices...</div>
+            )}
 
-            <BalanceView balance={balance} profit={profit} />
-            <h1>Trading Bot FINA</h1>
+            <BalanceView
+                balance={balance}
+                profit={profit}
+            />
+
+            <h1>
+                Trading Bot FINA
+            </h1>
 
             <div className="controls">
-                <button onClick={startTrading}>
+
+                <button
+                    onClick={startTrading}
+                >
                     Start Trading
                 </button>
 
-                <button onClick={stopTrading}>
+                <button
+                    onClick={stopTrading}
+                >
                     Stop Trading
                 </button>
+
             </div>
+
             <TradeHistory />
 
-        </main >
+        </main>
     );
 }
