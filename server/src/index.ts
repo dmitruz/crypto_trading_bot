@@ -16,6 +16,9 @@ let realizedProfit = 0;
 
 let unrealizedProfit = 0;
 
+let lastPortfolioEmit = 0;
+
+
 interface Position {
     symbol: string;
 
@@ -233,26 +236,39 @@ ws.on("message", (message) => {
     // LIVE PROFIT
     // =========================
 
-    unrealizedProfit = openPositions.reduce(
-        (total, position) => {
+    // =========================
+    // LIVE PROFIT
+    // =========================
 
-            const currentPrice =
-                position.symbol === symbol
-                    ? price
-                    : position.buyPrice;
+    if (tradingEnabled) {
 
-            const currentValue =
-                currentPrice * position.quantity;
+        unrealizedProfit = openPositions.reduce(
+            (total, position) => {
 
-            const pnl =
-                currentValue
-                - position.investedUsd;
+                const currentPrice =
+                    position.symbol === symbol
+                        ? price
+                        : position.buyPrice;
 
-            return total + pnl;
+                const currentValue =
+                    currentPrice * position.quantity;
 
-        },
-        0
-    );
+                const pnl =
+                    currentValue -
+                    position.investedUsd;
+
+                return total + pnl;
+
+            },
+            0
+        );
+
+    } else {
+
+        // Freeze floating profit after Stop
+        unrealizedProfit = 0;
+
+    }
 
     // =========================
     // PRICE HISTORY
@@ -291,12 +307,21 @@ ws.on("message", (message) => {
     // PORTFOLIO UPDATE
     // =========================
 
-    io.emit("portfolio", {
-        balance: usdBalance,
+    const now = Date.now();
 
-        profit:
-            realizedProfit + unrealizedProfit
-    });
+    if (now - lastPortfolioEmit > 500) {
+
+        lastPortfolioEmit = now;
+
+        io.emit("portfolio", {
+            balance: Number(usdBalance.toFixed(2)),
+            profit: Number(
+                (realizedProfit + unrealizedProfit)
+                    .toFixed(2)
+            )
+        });
+
+    }
 });
 
 io.on("connection", (socket) => {
