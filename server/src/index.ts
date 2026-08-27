@@ -14,10 +14,6 @@ let usdBalance = 1000;
 
 let realizedProfit = 0;
 
-let unrealizedProfit = 0;
-
-let lastPortfolioEmit = 0;
-
 
 interface Position {
     symbol: string;
@@ -38,12 +34,15 @@ interface Trade {
     type: "BUY" | "SELL";
     price: number;
     quantity: number;
+    investedUsd?: number;
+    returnedUsd?: number;
     profit?: number;
     time: string;
 }
 
 const tradeHistory: Trade[] = [];
 let tradingEnabled = false;
+let tradingSymbol: string | null = null;
 
 const app = express();
 
@@ -62,6 +61,13 @@ const liveHistory: Record<string, any[]> = {
     ETH: [],
     SOL: [],
     ADA: []
+};
+
+const latestPrices: Record<string, number> = {
+    BTC: 0,
+    ETH: 0,
+    SOL: 0,
+    ADA: 0
 };
 
 const COIN_MAP: Record<string, string> = {
@@ -99,115 +105,55 @@ ws.on("message", (message) => {
 
     if (!symbol) return;
 
+    // =========================
+    // CURRENT POSITION
+    // =========================
+
     const existingPosition = openPositions.find(
-        p => p.symbol === symbol
+        position => position.symbol === symbol
     );
+
+    // =========================
+    // UPDATE LATEST PRICE
+    // =========================
+
+    latestPrices[symbol] = price;
+
 
     // =========================
     // BUY LOGIC
     // =========================
 
-    if (tradingEnabled && !existingPosition) {
+    if (
+        tradingEnabled &&
+        tradingSymbol === symbol &&
+        openPositions.length === 0
+    ) {
 
-        const shouldBuy = Math.random() > 0.995;
+        const tradeAmountUsd = 50;
 
-        if (shouldBuy) {
+        if (usdBalance >= tradeAmountUsd) {
 
-            const tradeAmountUsd = 50;
+            const quantity = tradeAmountUsd / price;
 
-            if (usdBalance >= tradeAmountUsd) {
+            usdBalance -= tradeAmountUsd;
 
-                const quantity =
-                    tradeAmountUsd / price;
+            const position: Position = {
+                symbol,
+                buyPrice: price,
+                quantity,
+                investedUsd: tradeAmountUsd,
+                openedAt: new Date().toISOString()
+            };
 
-                usdBalance -= tradeAmountUsd;
-
-                const position = {
-                    symbol,
-
-                    buyPrice: price,
-
-                    quantity,
-
-                    investedUsd: tradeAmountUsd,
-
-                    openedAt: new Date().toISOString()
-                };
-
-                openPositions.push(position);
-
-                const trade = {
-                    symbol,
-
-                    type: "BUY" as const,
-
-                    price,
-
-                    quantity,
-
-                    investedUsd: tradeAmountUsd,
-
-                    time: new Date().toISOString()
-                };
-
-                tradeHistory.push(trade);
-
-                io.emit("trade", trade);
-
-                console.log(
-                    "BUY",
-                    symbol,
-                    "Spent:",
-                    tradeAmountUsd,
-                    "Qty:",
-                    quantity
-                );
-            }
-        }
-    }
-
-    // =========================
-    // SELL LOGIC
-    // =========================
-
-    if (tradingEnabled && existingPosition) {
-
-        const profitPercent =
-            ((price - existingPosition.buyPrice)
-                / existingPosition.buyPrice) * 100;
-
-        const shouldSell =
-            profitPercent >= 1 || profitPercent <= -1;
-
-        if (shouldSell) {
-
-            const currentValue =
-                price * existingPosition.quantity;
-
-            const profit =
-                currentValue
-                - existingPosition.investedUsd;
-
-            usdBalance += currentValue;
-
-            realizedProfit += profit;
+            openPositions.push(position);
 
             const trade = {
                 symbol,
-
-                type: "SELL" as const,
-
+                type: "BUY" as const,
                 price,
-
-                quantity: existingPosition.quantity,
-
-                investedUsd:
-                    existingPosition.investedUsd,
-
-                returnedUsd: currentValue,
-
-                profit,
-
+                quantity,
+                investedUsd: tradeAmountUsd,
                 time: new Date().toISOString()
             };
 
@@ -215,60 +161,26 @@ ws.on("message", (message) => {
 
             io.emit("trade", trade);
 
-            const index = openPositions.findIndex(
-                p => p.symbol === symbol
-            );
-
-            if (index >= 0) {
-                openPositions.splice(index, 1);
-            }
-
             console.log(
-                "SELL",
+                "BUY",
                 symbol,
-                "Profit:",
-                profit.toFixed(2)
+                "Price:",
+                price,
+                "Spent:",
+                tradeAmountUsd.toFixed(2),
+                "Quantity:",
+                quantity.toFixed(6)
             );
+
+            // Send updated balance immediately
+            io.emit("portfolio", {
+                balance: Number(usdBalance.toFixed(2)),
+                profit: Number(realizedProfit.toFixed(2))
+            });
         }
     }
 
-    // =========================
-    // LIVE PROFIT
-    // =========================
 
-    // =========================
-    // LIVE PROFIT
-    // =========================
-
-    if (tradingEnabled) {
-
-        unrealizedProfit = openPositions.reduce(
-            (total, position) => {
-
-                const currentPrice =
-                    position.symbol === symbol
-                        ? price
-                        : position.buyPrice;
-
-                const currentValue =
-                    currentPrice * position.quantity;
-
-                const pnl =
-                    currentValue -
-                    position.investedUsd;
-
-                return total + pnl;
-
-            },
-            0
-        );
-
-    } else {
-
-        // Freeze floating profit after Stop
-        unrealizedProfit = 0;
-
-    }
 
     // =========================
     // PRICE HISTORY
@@ -287,7 +199,7 @@ ws.on("message", (message) => {
     // LIVE PRICES
     // =========================
 
-    const latestPrices = Object.keys(liveHistory)
+    const pricesForFrontend = Object.keys(liveHistory)
         .map(sym => {
 
             const history = liveHistory[sym];
@@ -301,46 +213,33 @@ ws.on("message", (message) => {
             };
         });
 
-    io.emit("prices", latestPrices);
+    io.emit("prices", pricesForFrontend);
 
     // =========================
     // PORTFOLIO UPDATE
     // =========================
 
-    const now = Date.now();
 
-    if (now - lastPortfolioEmit > 500) {
-
-        lastPortfolioEmit = now;
-
-        io.emit("portfolio", {
-            balance: Number(usdBalance.toFixed(2)),
-            profit: Number(
-                (realizedProfit + unrealizedProfit)
-                    .toFixed(2)
-            )
-        });
-
-    }
 });
 
 io.on("connection", (socket) => {
 
     console.log("Frontend connected:", socket.id);
 
-    const latestPrices = Object.keys(liveHistory).map(symbol => {
+    const pricesForFrontend = Object.keys(latestPrices).map(symbol => ({
+        symbol,
+        price: latestPrices[symbol]
+    }));
 
-        const history = liveHistory[symbol];
+    socket.emit("prices", pricesForFrontend);
 
-        const last = history[history.length - 1];
-
-        return {
-            symbol,
-            price: last?.price || 0
-        };
+    socket.emit("portfolio", {
+        balance: Number(usdBalance.toFixed(2)),
+        profit: Number(
+            (realizedProfit)
+                .toFixed(2)
+        )
     });
-
-    socket.emit("prices", latestPrices);
 });
 
 app.get("/prices", (req, res) => {
@@ -395,12 +294,30 @@ app.get("/trades", (req, res) => {
 
 app.post("/start-trading", (req, res) => {
 
+    if (tradingEnabled || openPositions.length > 0) {
+
+        return res.json({
+            success: false,
+            message: "Trading is already active"
+        });
+    }
+
+    const symbols = Object.keys(COIN_MAP);
+
+    // Pick one random cryptocurrency
+    tradingSymbol =
+        symbols[Math.floor(Math.random() * symbols.length)];
+
     tradingEnabled = true;
 
-    console.log("Trading started");
+    console.log(
+        "Trading started. Selected:",
+        tradingSymbol
+    );
 
     res.json({
-        success: true
+        success: true,
+        symbol: tradingSymbol
     });
 });
 
@@ -408,10 +325,104 @@ app.post("/stop-trading", (req, res) => {
 
     tradingEnabled = false;
 
-    console.log("Trading stopped");
+    // No active position
+    if (openPositions.length === 0) {
+
+        tradingSymbol = null;
+
+        console.log("Trading stopped. No open position.");
+
+        io.emit("portfolio", {
+            balance: Number(usdBalance.toFixed(2)),
+            profit: Number(realizedProfit.toFixed(2))
+        });
+
+        return res.json({
+            success: true,
+            message: "Trading stopped. No open position."
+        });
+    }
+
+    const position = openPositions[0];
+
+    const currentPrice =
+        latestPrices[position.symbol];
+
+    if (!currentPrice) {
+
+        return res.status(500).json({
+            success: false,
+            message: "Current price unavailable"
+        });
+    }
+
+    // =========================
+    // SELL POSITION
+    // =========================
+
+    const returnedUsd =
+        currentPrice * position.quantity;
+
+    const profit =
+        returnedUsd - position.investedUsd;
+
+    usdBalance += returnedUsd;
+
+    realizedProfit += profit;
+
+    const trade = {
+        symbol: position.symbol,
+
+        type: "SELL" as const,
+
+        price: currentPrice,
+
+        quantity: position.quantity,
+
+        investedUsd: position.investedUsd,
+
+        returnedUsd,
+
+        profit,
+
+        time: new Date().toISOString()
+    };
+
+    tradeHistory.push(trade);
+
+    io.emit("trade", trade);
+
+    console.log(
+        "SELL",
+        position.symbol,
+        "Price:",
+        currentPrice,
+        "Returned:",
+        returnedUsd.toFixed(2),
+        "Profit:",
+        profit.toFixed(2)
+    );
+
+    // Remove position
+    openPositions.splice(0, 1);
+
+    tradingSymbol = null;
+
+    // =========================
+    // FINAL PORTFOLIO
+    // =========================
+
+    io.emit("portfolio", {
+        balance: Number(usdBalance.toFixed(2)),
+        profit: Number(realizedProfit.toFixed(2))
+    });
 
     res.json({
-        success: true
+        success: true,
+        symbol: position.symbol,
+        sellPrice: currentPrice,
+        returnedUsd,
+        profit
     });
 });
 
