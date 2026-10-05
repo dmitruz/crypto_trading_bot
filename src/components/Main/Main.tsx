@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import BalanceView from "../Balance";
 import PriceBoard from "../PriceBoard/PriceBoard";
 import { AssetPrice } from "../PriceBoard/types";
-import { googleLogout } from "@react-oauth/google";
-import GoogleAuthButton from "../Auth/GoogleAuthButton";
+
 import { GoogleUser } from "../../App";
 import TradeHistory from "../TradeHistory";
 import { socket } from "../../services/socket";
@@ -18,25 +17,6 @@ interface Props {
     >;
 }
 
-const startTrading = async () => {
-
-    await fetch(
-        "http://localhost:4000/start-trading",
-        {
-            method: "POST"
-        }
-    );
-};
-
-const stopTrading = async () => {
-
-    await fetch(
-        "http://localhost:4000/stop-trading",
-        {
-            method: "POST"
-        }
-    );
-};
 
 export default function Main({
     user,
@@ -51,6 +31,24 @@ export default function Main({
 
     const [prices, setPrices] =
         useState<AssetPrice[]>([]);
+
+    const [isTrading, setIsTrading] = useState(false);
+
+    const startTrading = async () => {
+        await fetch("http://localhost:4000/start-trading", {
+            method: "POST"
+        });
+
+        setIsTrading(true);
+    };
+
+    const stopTrading = async () => {
+        await fetch("http://localhost:4000/stop-trading", {
+            method: "POST"
+        });
+
+        setIsTrading(false);
+    };
 
     useEffect(() => {
 
@@ -70,43 +68,6 @@ export default function Main({
     return (
 
         <main className="main">
-
-            {!user ? (
-
-                <GoogleAuthButton
-                    onLogin={setUser}
-                />
-
-            ) : (
-
-                <div className="user-container">
-
-                    <div className="user-bar">
-
-                        <img
-                            src={user.picture}
-                            width={32}
-                        />
-
-                        <span>
-                            {user.name}
-                        </span>
-
-                        <button
-                            onClick={() => {
-
-                                googleLogout();
-
-                                setUser(null);
-                            }}
-                        >
-                            Logout
-                        </button>
-
-                    </div>
-
-                </div>
-            )}
 
             <PriceBoard
                 prices={prices}
@@ -129,13 +90,17 @@ export default function Main({
             <div className="controls">
 
                 <button
+                    className="start-button"
                     onClick={startTrading}
+                    disabled={isTrading}
                 >
                     Start Trading
                 </button>
 
                 <button
+                    className="stop-button"
                     onClick={stopTrading}
+                    disabled={!isTrading}
                 >
                     Stop Trading
                 </button>

@@ -40,17 +40,49 @@
     color: #2b323e;
 }
 
-.user-container {
-    display: flex;
-}
-
-.user-bar {
-    display: flex;
-    flex-direction: column;
-}
 
 .loader {
     text-align: center;
     padding: 20px;
     color: #aaa;
+}
+
+.trading-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.start-button,
+.stop-button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.start-button {
+    background: #2e8b57;
+    color: white;
+}
+
+.start-button:hover:not(:disabled) {
+    background: #267349;
+}
+
+.stop-button {
+    background: #c0392b;
+    color: white;
+}
+
+.stop-button:hover:not(:disabled) {
+    background: #992d22;
+}
+
+.start-button:disabled,
+.stop-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }

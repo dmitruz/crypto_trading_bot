@@ -59,22 +59,46 @@ app.use(cors());
 const liveHistory: Record<string, any[]> = {
     BTC: [],
     ETH: [],
+    BNB: [],
     SOL: [],
-    ADA: []
+    XRP: [],
+    ADA: [],
+    DOGE: [],
+    AVAX: [],
+    LINK: [],
+    DOT: [],
+    LTC: [],
+    TRX: []
 };
 
 const latestPrices: Record<string, number> = {
     BTC: 0,
     ETH: 0,
+    BNB: 0,
     SOL: 0,
-    ADA: 0
+    XRP: 0,
+    ADA: 0,
+    DOGE: 0,
+    AVAX: 0,
+    LINK: 0,
+    DOT: 0,
+    LTC: 0,
+    TRX: 0
 };
 
 const COIN_MAP: Record<string, string> = {
     BTC: "BTCUSDT",
     ETH: "ETHUSDT",
+    BNB: "BNBUSDT",
     SOL: "SOLUSDT",
-    ADA: "ADAUSDT"
+    XRP: "XRPUSDT",
+    ADA: "ADAUSDT",
+    DOGE: "DOGEUSDT",
+    AVAX: "AVAXUSDT",
+    LINK: "LINKUSDT",
+    DOT: "DOTUSDT",
+    LTC: "LTCUSDT",
+    TRX: "TRXUSDT"
 };
 
 const streams = Object.values(COIN_MAP)
