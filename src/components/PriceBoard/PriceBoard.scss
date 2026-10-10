@@ -1,7 +1,21 @@
 .prices-board {
-    display: flex;
-    gap: 16px;
-    margin: 20px 0;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 120px);
+    gap: 15px;
+    justify-content: center;
+}
+
+@media (max-width: 700px) {
+    .prices-board {
+        grid-template-columns: repeat(3, 120px);
+    }
+}
+
+@media (max-width: 500px) {
+    .prices-board {
+        grid-template-columns: repeat(2, 120px);
+    }
 }
 
 .price-tile {
