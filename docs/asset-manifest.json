@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/crypto_trading_bot/static/css/main.6ed08a9b.css",
+    "main.js": "/crypto_trading_bot/static/js/main.ad843fcb.js",
+    "index.html": "/crypto_trading_bot/index.html",
+    "main.6ed08a9b.css.map": "/crypto_trading_bot/static/css/main.6ed08a9b.css.map",
+    "main.ad843fcb.js.map": "/crypto_trading_bot/static/js/main.ad843fcb.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6ed08a9b.css",
+    "static/js/main.ad843fcb.js"
+  ]
+}
