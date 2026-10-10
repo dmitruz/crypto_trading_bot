@@ -18,7 +18,7 @@ export default function App() {
   const [user, setUser] = useState<GoogleUser | null>(null);
   return (
     <GoogleOAuthProvider clientId="253041364233-g31ke35orda60ojt333fr9no2e7feuh6.apps.googleusercontent.com">
-      <BrowserRouter>
+      <BrowserRouter basename={process.env.PUBLIC_URL}>
 
         <Navbar user={user} setUser={setUser} />
 
