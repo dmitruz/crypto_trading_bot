@@ -129,24 +129,13 @@ ws.on("message", (message) => {
 
     if (!symbol) return;
 
-    // =========================
-    // CURRENT POSITION
-    // =========================
 
     const existingPosition = openPositions.find(
         position => position.symbol === symbol
     );
 
-    // =========================
-    // UPDATE LATEST PRICE
-    // =========================
-
     latestPrices[symbol] = price;
 
-
-    // =========================
-    // BUY LOGIC
-    // =========================
 
     if (
         tradingEnabled &&
@@ -196,7 +185,6 @@ ws.on("message", (message) => {
                 quantity.toFixed(6)
             );
 
-            // Send updated balance immediately
             io.emit("portfolio", {
                 balance: Number(usdBalance.toFixed(2)),
                 profit: Number(realizedProfit.toFixed(2))
@@ -206,10 +194,6 @@ ws.on("message", (message) => {
 
 
 
-    // =========================
-    // PRICE HISTORY
-    // =========================
-
     liveHistory[symbol].push({
         date: new Date().toISOString(),
         price
@@ -218,10 +202,6 @@ ws.on("message", (message) => {
     if (liveHistory[symbol].length > 1000) {
         liveHistory[symbol].shift();
     }
-
-    // =========================
-    // LIVE PRICES
-    // =========================
 
     const pricesForFrontend = Object.keys(liveHistory)
         .map(sym => {
@@ -238,11 +218,6 @@ ws.on("message", (message) => {
         });
 
     io.emit("prices", pricesForFrontend);
-
-    // =========================
-    // PORTFOLIO UPDATE
-    // =========================
-
 
 });
 
@@ -349,7 +324,6 @@ app.post("/stop-trading", (req, res) => {
 
     tradingEnabled = false;
 
-    // No active position
     if (openPositions.length === 0) {
 
         tradingSymbol = null;
@@ -380,9 +354,6 @@ app.post("/stop-trading", (req, res) => {
         });
     }
 
-    // =========================
-    // SELL POSITION
-    // =========================
 
     const returnedUsd =
         currentPrice * position.quantity;
@@ -427,14 +398,11 @@ app.post("/stop-trading", (req, res) => {
         profit.toFixed(2)
     );
 
-    // Remove position
+
     openPositions.splice(0, 1);
 
     tradingSymbol = null;
 
-    // =========================
-    // FINAL PORTFOLIO
-    // =========================
 
     io.emit("portfolio", {
         balance: Number(usdBalance.toFixed(2)),
@@ -450,6 +418,8 @@ app.post("/stop-trading", (req, res) => {
     });
 });
 
-httpServer.listen(4000, () => {
-    console.log("Server running on http://localhost:4000");
+const PORT = Number(process.env.PORT) || 4000;
+
+httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
