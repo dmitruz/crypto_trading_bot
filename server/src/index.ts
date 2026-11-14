@@ -48,13 +48,21 @@ const app = express();
 
 const httpServer = createServer(app);
 
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://dmitruz.github.io"
+];
+
+app.use(cors({
+    origin: allowedOrigins
+}));
+
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: allowedOrigins,
+        methods: ["GET", "POST"]
     }
 });
-
-app.use(cors());
 
 const liveHistory: Record<string, any[]> = {
     BTC: [],
