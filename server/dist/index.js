@@ -18,12 +18,19 @@ let tradingEnabled = false;
 let tradingSymbol = null;
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://dmitruz.github.io"
+];
+app.use((0, cors_1.default)({
+    origin: allowedOrigins
+}));
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: allowedOrigins,
+        methods: ["GET", "POST"]
     }
 });
-app.use((0, cors_1.default)());
 const liveHistory = {
     BTC: [],
     ETH: [],
@@ -81,17 +88,8 @@ ws.on("message", (message) => {
     const symbol = Object.keys(COIN_MAP).find(key => COIN_MAP[key] === pair);
     if (!symbol)
         return;
-    // =========================
-    // CURRENT POSITION
-    // =========================
     const existingPosition = openPositions.find(position => position.symbol === symbol);
-    // =========================
-    // UPDATE LATEST PRICE
-    // =========================
     latestPrices[symbol] = price;
-    // =========================
-    // BUY LOGIC
-    // =========================
     if (tradingEnabled &&
         tradingSymbol === symbol &&
         openPositions.length === 0) {
@@ -118,16 +116,12 @@ ws.on("message", (message) => {
             tradeHistory.push(trade);
             io.emit("trade", trade);
             console.log("BUY", symbol, "Price:", price, "Spent:", tradeAmountUsd.toFixed(2), "Quantity:", quantity.toFixed(6));
-            // Send updated balance immediately
             io.emit("portfolio", {
                 balance: Number(usdBalance.toFixed(2)),
                 profit: Number(realizedProfit.toFixed(2))
             });
         }
     }
-    // =========================
-    // PRICE HISTORY
-    // =========================
     liveHistory[symbol].push({
         date: new Date().toISOString(),
         price
@@ -135,9 +129,6 @@ ws.on("message", (message) => {
     if (liveHistory[symbol].length > 1000) {
         liveHistory[symbol].shift();
     }
-    // =========================
-    // LIVE PRICES
-    // =========================
     const pricesForFrontend = Object.keys(liveHistory)
         .map(sym => {
         const history = liveHistory[sym];
@@ -148,9 +139,6 @@ ws.on("message", (message) => {
         };
     });
     io.emit("prices", pricesForFrontend);
-    // =========================
-    // PORTFOLIO UPDATE
-    // =========================
 });
 io.on("connection", (socket) => {
     console.log("Frontend connected:", socket.id);
@@ -220,7 +208,6 @@ app.post("/start-trading", (req, res) => {
 });
 app.post("/stop-trading", (req, res) => {
     tradingEnabled = false;
-    // No active position
     if (openPositions.length === 0) {
         tradingSymbol = null;
         console.log("Trading stopped. No open position.");
@@ -241,9 +228,6 @@ app.post("/stop-trading", (req, res) => {
             message: "Current price unavailable"
         });
     }
-    // =========================
-    // SELL POSITION
-    // =========================
     const returnedUsd = currentPrice * position.quantity;
     const profit = returnedUsd - position.investedUsd;
     usdBalance += returnedUsd;
@@ -261,12 +245,8 @@ app.post("/stop-trading", (req, res) => {
     tradeHistory.push(trade);
     io.emit("trade", trade);
     console.log("SELL", position.symbol, "Price:", currentPrice, "Returned:", returnedUsd.toFixed(2), "Profit:", profit.toFixed(2));
-    // Remove position
     openPositions.splice(0, 1);
     tradingSymbol = null;
-    // =========================
-    // FINAL PORTFOLIO
-    // =========================
     io.emit("portfolio", {
         balance: Number(usdBalance.toFixed(2)),
         profit: Number(realizedProfit.toFixed(2))
@@ -279,6 +259,7 @@ app.post("/stop-trading", (req, res) => {
         profit
     });
 });
-httpServer.listen(4000, () => {
-    console.log("Server running on http://localhost:4000");
+const PORT = Number(process.env.PORT) || 4000;
+httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
