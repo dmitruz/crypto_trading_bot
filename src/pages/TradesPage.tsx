@@ -1,3 +1,4 @@
+import API_URL from "../services/api";
 import { useEffect, useState } from "react";
 
 export default function TradesPage() {
@@ -6,7 +7,7 @@ export default function TradesPage() {
 
     useEffect(() => {
 
-        fetch("http://localhost:4000/trades")
+        fetch(`${API_URL}/trades`)
             .then(res => res.json())
             .then(setTrades);
 

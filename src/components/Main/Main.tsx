@@ -1,3 +1,4 @@
+import API_URL from "../../services/api";
 import { useState, useEffect } from "react";
 import BalanceView from "../Balance";
 import PriceBoard from "../PriceBoard/PriceBoard";
@@ -35,7 +36,7 @@ export default function Main({
     const [isTrading, setIsTrading] = useState(false);
 
     const startTrading = async () => {
-        await fetch("http://localhost:4000/start-trading", {
+        await fetch(`${API_URL}/start-trading`, {
             method: "POST"
         });
 
@@ -43,7 +44,7 @@ export default function Main({
     };
 
     const stopTrading = async () => {
-        await fetch("http://localhost:4000/stop-trading", {
+        await fetch(`${API_URL}/stop-trading`, {
             method: "POST"
         });
 

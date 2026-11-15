@@ -1,3 +1,4 @@
+import API_URL from "../../services/api";
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -30,7 +31,7 @@ export default function ChartPage() {
             try {
 
                 const res = await fetch(
-                    `http://localhost:4000/history/${symbol}`
+                    `${API_URL}/history/${symbol}`
                 );
 
                 const history = await res.json();
